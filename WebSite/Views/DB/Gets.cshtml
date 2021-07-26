@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Gets";
+}
+
+<h1>数据列表</h1>
+
+@{
+string val = (string)ViewData["result"];
+}
+
+<pre id="content">
+@val
+</pre>
+
+<script type="text/javascript">
+setInterval(function() {
+  location.reload();
+}, 3000);
+</script>
