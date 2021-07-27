@@ -3,26 +3,17 @@
 }
 
 <body>
-    <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
-    <div id="main" style="width: 600px;height:400px;"></div>
+    <script src="https://cdn.staticfile.org/echarts/5.1.2/echarts.min.js"></script>
+    <div id="main" style="width: 1200px;height:600px;"></div>
+
     <script type="text/javascript">
+        //var jsonArr = @Html.Raw(@ViewData["json"]);
+        var jsonArr = [];
+        var nameData = [];
+        var seriesData = [];
+
         // 基于准备好的dom，初始化echarts实例
         var myChart = echarts.init(document.getElementById('main'));
-        var jsonArr = @Html.Raw(@ViewData["json"]);
-        console.log(jsonArr);
-        if (jsonArr[0].DIAMETERS == 0) {
-            alert("没有数据！");
-        }
-
-        var names = [];
-        var series = [];
-
-        for (var i = 0; i < 10; i++) {
-            name[i] = jsonArr[i].IDS;
-            series[i] = jsonArr[i].DIAMETERS;
-        }
-
-        // 指定图表的配置项和数据
         var option = {
             title: {
                 text: '测试图表'
@@ -32,24 +23,58 @@
                 data: ['Diameter']
             },
             xAxis: {
-                data: names
+                type: "category",
+                data: nameData
             },
-            yAxis: {},
+            yAxis: {
+                type: "value",
+                min: -1,
+                max: 6
+            },
             series: [{
                 name: 'Diameter',
-                type: 'bar',
-                data: series
+                type: 'line',
+                data: seriesData
             }]
         };
-
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-    </script>
-
-    <script type="text/javascript">
+        
         setInterval(function () {
-            location.reload();
+            //alert("刷新！！");
+            $.ajax({//发送请求
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: "/DB/GetJSON?N=50",
+            error: function (data) {
+                alert("出错了！！:" + data);
+            },
+            success: function (data) {
+                //console.log(data);
+                jsonArr = JSON.parse(data);
+            }
+            })
+            if (jsonArr[0].DIAMETER == 0) {
+                alert("没有数据！");
+            }
+            console.log(jsonArr);
+            $.each(jsonArr, function (index, value) {
+                nameData[index] = jsonArr[index].ID;
+                seriesData[index] = jsonArr[index].DIAMETER;
+            });
+            // 指定图表的配置项和数据
+            myChart.setOption({
+                xAxis: {
+                    data: nameData
+                },
+                series: [{
+                    data: seriesData
+                }]
+            });
         }, 3000);
+        myChart.setOption(option);
+        window.onresize = function () {
+            resizeWorldMapContainer();
+            myChart.resize();
+        };
     </script>
 
 </body>

@@ -45,7 +45,7 @@ namespace WebSite.Controllers
                 result = "";
                 foreach (var s in ins)
                 {
-                    result += $"{s.ID} \t {s.TIME} \t {s.DIAMETER} \t {s.POS} \t {s.PASSED} \n";
+                    result = $"{s.ID} \t {s.TIME} \t {s.DIAMETER} \t {s.POS} \t {s.PASSED} \n" + result;
                 }   
             }
             ViewData["result"] = result;
@@ -82,6 +82,34 @@ namespace WebSite.Controllers
             ViewData["diameters"] = string.Join(",", diameters);
             ViewData["json"] = result;
             return View();
+        }
+
+        //取N条JSON记录
+        public ActionResult<string> GetJSON(int N=100)
+        {
+            var ins = DBAccess.GetRecord().ToList();
+            if (ins.Count() < N)
+                N = ins.Count();
+            var results = new Record[N];
+            if (ins.Count() != 0)
+            {
+                int len = ins.Count() - 1;
+                for (int num = 0; num < N; num++)
+                {
+                    results[num] = ins[len];
+                    len--;
+                    if (len < 0) break;
+                }
+            }
+            string result = "";
+            for (int num = 0; num < N; num++)
+            {
+                result += $"{{\"ID\":\"{results[num].ID}\",\"TIME\":\"{results[num].TIME}\",\"DIAMETER\":\"{results[num].DIAMETER}\",\"POS\":\"{results[num].POS}\",\"PASSED\":\"{results[num].PASSED}\"}},";
+            }
+            result = result.TrimEnd(',');
+            result = "[" + result + "]";
+            ViewData["json"] = result;
+            return result;
         }
 
         //取某id记录
