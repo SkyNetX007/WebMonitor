@@ -40,7 +40,6 @@ namespace WebSite.Controllers
         {
             var result = "没有数据";
             var ins = DBAccess.GetRecord();
-
             if (ins.Count() != 0)
             {
                 result = "";
@@ -48,13 +47,43 @@ namespace WebSite.Controllers
                 {
                     result += $"{s.ID} \t {s.TIME} \t {s.DIAMETER} \t {s.POS} \t {s.PASSED} \n";
                 }   
-
             }
-
             ViewData["result"] = result;
             return View();
         }
-        
+
+        //取全部记录
+        public ActionResult<string> Charts()
+        {
+            var results = new Record[10];
+            var ids = new int[10];
+            var diameters = new double[10];
+            var ins = DBAccess.GetRecord().ToList();
+            if (ins.Count() != 0)
+            {
+                int len = ins.Count() - 1;
+                for (int num = 0; num < 10; num++)
+                {
+                    results[num] = ins[len];
+                    ids[num] = ins[len].ID;
+                    diameters[num] = ins[len].DIAMETER;
+                    len--;
+                    if (len < 0) break;
+                }
+            }
+            string result = "";
+            for (int num = 0; num < 10; num++)
+            {
+                result += $"{{\"IDS\":\"{ids[num]}\",\"DIAMETERS\":\"{diameters[num]}\"}},";
+            }
+            result = result.TrimEnd(',');
+            result = "[" + result + "]";
+            ViewData["ids"] = string.Join(",",ids);
+            ViewData["diameters"] = string.Join(",", diameters);
+            ViewData["json"] = result;
+            return View();
+        }
+
         //取某id记录
         public ActionResult<string> Get(int id)
         {
