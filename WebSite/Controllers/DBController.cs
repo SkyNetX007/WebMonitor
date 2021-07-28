@@ -39,16 +39,24 @@ namespace WebSite.Controllers
         public ActionResult<string> Gets()
         {
             var result = "没有数据";
+            List<List<string>> tableResult = new List<List<string>>();
             var ins = DBAccess.GetRecord();
             if (ins.Count() != 0)
             {
                 result = "";
                 foreach (var s in ins)
                 {
-                    result = $"{s.ID} \t {s.TIME} \t {s.DIAMETER} \t {s.POS} \t {s.PASSED} \n" + result;
+                    List<string> tmpTableResult = new List<string>();
+                    tmpTableResult.Add($"{s.ID}");
+                    tmpTableResult.Add($"{s.TIME}");
+                    tmpTableResult.Add($"{s.DIAMETER}");
+                    tmpTableResult.Add($"{s.POS}");
+                    tmpTableResult.Add($"{s.PASSED}");
+                    tableResult.Add(tmpTableResult);
                 }   
             }
-            ViewData["result"] = result;
+            tableResult.Reverse();
+            ViewData["tableResult"]= tableResult;
             return View();
         }
 

@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebSite.DatabaseAccess
 {
-    [Table("steelball")]
+    [Table("all_lines")]
     public class Record
     {
         [Column("ID")]

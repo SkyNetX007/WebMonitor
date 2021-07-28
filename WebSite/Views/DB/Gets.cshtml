@@ -8,9 +8,30 @@
     string val = "ID \t TIME \t\t\t DIAMETER \t\t POS \t\t PASSED \n" + (string)ViewData["result"];
 }
 
-<pre id="content">
-@val
-</pre>
+
+<table class="table">
+    <tr>
+        <th>ID</th>
+        <th>TIME</th>
+        <th>DIAMETER</th>
+        <th>POS</th>
+        <th>PASSED</th>
+    </tr>
+    @{
+        List<List<string>>tableResult = (List<List<string>>)ViewData["tableResult"];
+        foreach(List<string> l in tableResult)
+        {
+            <tr>
+            @{
+            foreach(string s in l)
+                {
+                    <td>@s</td>
+                }
+            }
+            </tr>
+        }
+    }
+</table>
 
 <script type="text/javascript">
 setInterval(function() {
