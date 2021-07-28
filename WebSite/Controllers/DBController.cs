@@ -44,12 +44,14 @@ namespace WebSite.Controllers
             {
                 foreach (var s in ins)
                 {
-                    List<string> tmpTableResult = new List<string>();
-                    tmpTableResult.Add($"{s.ID}");
-                    tmpTableResult.Add($"{s.TIME}");
-                    tmpTableResult.Add($"{s.DIAMETER}");
-                    tmpTableResult.Add($"{s.POS}");
-                    tmpTableResult.Add($"{s.PASSED}");
+                    List<string> tmpTableResult = new()
+                    {
+                        $"{s.ID}",
+                        $"{s.TIME}",
+                        $"{s.DIAMETER}",
+                        $"{s.POS}",
+                        $"{s.PASSED}"
+                    };
                     tableResult.Add(tmpTableResult);
                 }   
             }
@@ -129,6 +131,37 @@ namespace WebSite.Controllers
                 result = _record.ToString();
             }
 
+            return result;
+        }
+
+        public ActionResult<string> GetTableResult(string line="", int N = 100)
+        {
+            var ins = DBAccess.GetRecord().ToList();
+            if(line != "")
+            {
+                ins.RemoveAll(n=>n.POS!=line);
+            }
+            if (ins.Count < N || N == -1)
+                N = ins.Count;
+            var results = new Record[N];
+            if (ins.Count != 0)
+            {
+                int len = ins.Count - 1;
+                for (int num = 0; num < N; num++)
+                {
+                    results[num] = ins[len];
+                    len--;
+                    if (len < 0) break;
+                }
+            }
+            string result = "";
+            for (int num = 0; num < N; num++)
+            {
+                result += $"{{\"ID\":\"{results[num].ID}\",\"TIME\":\"{results[num].TIME}\",\"DIAMETER\":\"{results[num].DIAMETER}\",\"POS\":\"{results[num].POS}\",\"PASSED\":\"{results[num].PASSED}\"}},";
+            }
+            result = result.TrimEnd(',');
+            result = "[" + result + "]";
+            ViewData["json"] = result;
             return result;
         }
     }

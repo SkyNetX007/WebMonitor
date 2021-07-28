@@ -1,40 +1,48 @@
 ﻿@{
     ViewData["Title"] = "Gets";
 }
-
-<h1>数据列表</h1>
-
-@{
-    string val = "ID \t TIME \t\t\t DIAMETER \t\t POS \t\t PASSED \n" + (string)ViewData["result"];
-}
-
-
-<table class="table">
-    <tr>
-        <th>ID</th>
-        <th>TIME</th>
-        <th>DIAMETER</th>
-        <th>POS</th>
-        <th>PASSED</th>
-    </tr>
-    @{
-        List<List<string>>tableResult = (List<List<string>>)ViewData["tableResult"];
-        foreach(List<string> l in tableResult)
-        {
-            <tr>
-            @{
-            foreach(string s in l)
-                {
-                    <td>@s</td>
+<body>
+    <fiedlset>
+        <legend>CONTENT</legend>
+        <table class="table">
+            <thead>
+                <th>ID</th>
+                <th>TIME</th>
+                <th>DIAMETER</th>
+                <th>POS</th>
+                <th>PASSED</th>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </fieldset>
+    
+    <script type="text/javascript">
+        setInterval(function updateTable(){
+            $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: "/DB/GetTableResult?N=100",//&line=line2
+            error: function (data) {
+                alert("Error in getTableResult: " + data);
+            },
+            success: function (data) {
+                jsonArr = JSON.parse(data);
+                if (jsonArr[0].DIAMETER == 0) {
+                    alert("No data!");
                 }
+                $("#tableBody").html("");
+                $.each(jsonArr, function (index, value) {
+                    str1 = "<tr>" + 
+                        "<td>" + jsonArr[index].ID + "</td>" +
+                        "<td>" + jsonArr[index].TIME + "</td>" +
+                        "<td>" + jsonArr[index].DIAMETER + "</td>" +
+                        "<td>" + jsonArr[index].POS + "</td>" +
+                        "<td>" + jsonArr[index].PASSED + "</td>" +
+                        "</tr>";
+                    $("#tableBody").append(str1);
+                });
             }
-            </tr>
-        }
-    }
-</table>
-
-<script type="text/javascript">
-setInterval(function() {
-  location.reload();
-}, 3000);
-</script>
+            })
+        }, 3000);
+    </script>
+</body>
