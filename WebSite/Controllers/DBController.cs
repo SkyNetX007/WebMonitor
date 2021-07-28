@@ -11,12 +11,12 @@ namespace WebSite.Controllers
     public class DBController : Controller
     {
         private IDBAccess DBAccess;
-        
+
         public DBController(IDBAccess dbaccess)
         {
             DBAccess = dbaccess;
         }
-        
+
         //插入数据
         public ActionResult<string> Create(int ID, DateTime TIME, double DIAMETER, string POS, bool PASSED)
         {
@@ -53,10 +53,10 @@ namespace WebSite.Controllers
                         $"{s.PASSED}"
                     };
                     tableResult.Add(tmpTableResult);
-                }   
+                }
             }
             tableResult.Reverse();
-            ViewData["tableResult"]= tableResult;
+            ViewData["tableResult"] = tableResult;
             return View();
         }
 
@@ -86,14 +86,14 @@ namespace WebSite.Controllers
             }
             result = result.TrimEnd(',');
             result = "[" + result + "]";
-            ViewData["ids"] = string.Join(",",ids);
+            ViewData["ids"] = string.Join(",", ids);
             ViewData["diameters"] = string.Join(",", diameters);
             ViewData["json"] = result;
             return View();
         }
 
         //取N条JSON记录
-        public ActionResult<string> GetJSON(int N=100)
+        public ActionResult<string> GetJSON(int N = 100)
         {
             var ins = DBAccess.GetRecord().ToList();
             if (ins.Count() < N)
@@ -134,12 +134,12 @@ namespace WebSite.Controllers
             return result;
         }
 
-        public ActionResult<string> GetTableResult(string line="", int N = 100)
+        public ActionResult<string> GetTableResult(string line = "_none", int N = 100)
         {
             var ins = DBAccess.GetRecord().ToList();
-            if(line != "")
+            if (line != "_none")
             {
-                ins.RemoveAll(n=>n.POS!=line);
+                ins.RemoveAll(n => n.POS != line);
             }
             if (ins.Count < N || N == -1)
                 N = ins.Count;
