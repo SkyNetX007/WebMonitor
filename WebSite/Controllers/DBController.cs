@@ -38,12 +38,10 @@ namespace WebSite.Controllers
         //取全部记录
         public ActionResult<string> Gets()
         {
-            var result = "没有数据";
             List<List<string>> tableResult = new List<List<string>>();
             var ins = DBAccess.GetRecord();
             if (ins.Count() != 0)
             {
-                result = "";
                 foreach (var s in ins)
                 {
                     List<string> tmpTableResult = new List<string>();
