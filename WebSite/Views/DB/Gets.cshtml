@@ -4,32 +4,69 @@
 
 <h1>数据列表</h1>
 
-<table class="table">
-    <tr>
-        <th>ID</th>
-        <th>TIME</th>
-        <th>DIAMETER</th>
-        <th>POS</th>
-        <th>PASSED</th>
-    </tr>
-    @{
-        List<List<string>> tableResult = (List<List<string>>)ViewData["tableResult"];
-        foreach (List<string> l in tableResult)
-        {
-            <tr>
-                @{
-                    foreach (string s in l)
-                    {
-                        <td>@s</td>
-                    }
-                }
-            </tr>
-        }
-    }
-</table>
+<body>
 
+    <fieldset>
+        <legend>显示数据条数</legend>
+        <select id="listNum" class="form-select form-select-lg mb-3">
+            <option selected value="50">50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="-1">所有</option>
+        </select>
+    </fieldset>
+
+    <fildset>
+        <legend>数据条目</legend>
+        <table class="table table-striped">
+            <thead>
+            <th>ID</th>
+            <th>TIME</th>
+            <th>DIAMETER</th>
+            <th>POS</th>
+            <th>PASSED</th>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        </fieldset>
+</body>
+
+<script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
 <script type="text/javascript">
-setInterval(function() {
-  location.reload();
-}, 3000);
+
+    var num = $("#listNum").find("option:selected").val();
+    var QueryUrl = "/DB/GetJSON";
+
+    setInterval(function updateTable() {
+
+        num = $("#listNum").find("option:selected").val();
+        if (num == -1) { num = "999"; }
+        QueryUrl = "/DB/GetJSON?N=" + num;
+
+        $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: QueryUrl,
+            error: function (data) {
+                alert("Error in getTableResult: " + data);
+            },
+            success: function (data) {
+                jsonArr = JSON.parse(data);
+                if (jsonArr[0].DIAMETER == 0) {
+                    alert("No data!");
+                }
+                $("#tableBody").html("");
+                $.each(jsonArr, function (index, value) {
+                    str1 = "<tr>" +
+                        "<td>" + jsonArr[index].ID + "</td>" +
+                        "<td>" + jsonArr[index].TIME + "</td>" +
+                        "<td>" + jsonArr[index].DIAMETER + "</td>" +
+                        "<td>" + jsonArr[index].POS + "</td>" +
+                        "<td>" + jsonArr[index].PASSED + "</td>" +
+                        "</tr>";
+                    $("#tableBody").append(str1);
+                });
+            }
+        })
+    }, 3000);
 </script>
