@@ -14,11 +14,12 @@
         </thead>
         <tbody id="StatusTable"></tbody>
     </table>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <p>项目地址：<a href="https://gitee.com/SkyNetX007/WebMonitor/">https://gitee.com/SkyNetX007/WebMonitor/</a></p>
 </div>
 
 <script>
     var jsonArr = [];
+    var cssArr = jsonArr;
 
     setInterval(function () {
         $.ajax({
@@ -33,7 +34,20 @@
             }
         })
         if (jsonArr[0] == null) {
-            alert("没有数据！");
+            alert("等待数据...");
+        }
+
+        cssArr = jsonArr;
+        for (var i = 0; i < cssArr.length; i++)
+        {
+            cssArr[i].POS = "<a href=" + "/DB/GetCharts?POS=" + jsonArr[i].POS + ">" + jsonArr[i].POS + "</a>";
+            if (jsonArr[i].Status == 0) {
+                cssArr[i].Status = "<span class='badge bg-danger text-white'>" + "离线" + "</span>";
+            }
+            else
+            {
+                cssArr[i].Status = "<span class='badge bg-info text-white'>" + "在线" + "</span>";
+            }
         }
 
         RefreshTable();
@@ -43,8 +57,8 @@
 
             $("#StatusTable").empty();
 
-            for (var i = 0; i < jsonArr.length; i++) { //遍历一下json数据  
-                var trow = getDataRow(jsonArr[i]); //定义一个方法,返回tr数据
+            for (var i = 0; i < cssArr.length; i++) { //遍历一下json数据
+                var trow = getDataRow(cssArr[i]); //定义一个方法,返回tr数据
                 tbody.appendChild(trow);
             }
         }
