@@ -4,5 +4,68 @@
 
 <div class="text-center">
     <h1 class="display-4">钢球检测监控</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>设备</th>
+                <th>最后更新时间</th>
+                <th>状态</th>
+            </tr>
+        </thead>
+        <tbody id="StatusTable"></tbody>
+    </table>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<script>
+    var jsonArr = [];
+
+    setInterval(function () {
+        $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: "/DB/GetStatus",
+            error: function (data) {
+                alert("出错了！！:" + data);
+            },
+            success: function (data) {
+                jsonArr = JSON.parse(data);
+            }
+        })
+        if (jsonArr[0] == null) {
+            alert("没有数据！");
+        }
+
+        RefreshTable();
+
+        function RefreshTable() {
+            var tbody = document.getElementById('StatusTable');
+
+            $("#StatusTable").empty();
+
+            for (var i = 0; i < jsonArr.length; i++) { //遍历一下json数据  
+                var trow = getDataRow(jsonArr[i]); //定义一个方法,返回tr数据
+                tbody.appendChild(trow);
+            }
+        }
+
+        function getDataRow(h) {
+            var row = document.createElement('tr'); //创建行  
+
+            var POSCell = document.createElement('td'); //创建第一列POS
+            POSCell.innerHTML = h.POS; //填充数据
+            row.appendChild(POSCell); //加入行
+
+            var RecordTimeCell = document.createElement('td');
+            RecordTimeCell.innerHTML = h.RecordTime;
+            row.appendChild(RecordTimeCell);
+
+            var StatusCell = document.createElement('td');
+            StatusCell.innerHTML = h.Status;
+            row.appendChild(StatusCell);
+
+            return row;
+        }
+
+    }, 3000);
+</script>

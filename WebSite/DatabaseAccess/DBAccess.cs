@@ -27,6 +27,12 @@ namespace WebSite.DatabaseAccess
             return Context.Record.ToList();
         }
 
+        //取某设备记录
+        public IEnumerable<Record> GetRecordByPos(string pos)
+        {
+            return Context.Record.Where(s=>s.POS == pos).ToList();
+        }
+
         //取某id记录
         public Record GetRecordByID(int id)
         {

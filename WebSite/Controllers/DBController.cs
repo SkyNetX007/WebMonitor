@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.IO;
+using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,56 +40,50 @@ namespace WebSite.Controllers
         //取全部记录
         public ActionResult<string> Gets()
         {
-            var result = "没有数据";
+            List<List<string>> tableResult = new List<List<string>>();
             var ins = DBAccess.GetRecord();
             if (ins.Count() != 0)
             {
-                result = "";
                 foreach (var s in ins)
                 {
-                    result = $"{s.ID} \t {s.TIME} \t {s.DIAMETER} \t {s.POS} \t {s.PASSED} \n" + result;
-                }   
-            }
-            ViewData["result"] = result;
-            return View();
-        }
-
-        //取全部记录
-        public ActionResult<string> Charts()
-        {
-            var results = new Record[10];
-            var ids = new int[10];
-            var diameters = new double[10];
-            var ins = DBAccess.GetRecord().ToList();
-            if (ins.Count() != 0)
-            {
-                int len = ins.Count() - 1;
-                for (int num = 0; num < 10; num++)
-                {
-                    results[num] = ins[len];
-                    ids[num] = ins[len].ID;
-                    diameters[num] = ins[len].DIAMETER;
-                    len--;
-                    if (len < 0) break;
+                    List<string> tmpTableResult = new List<string>();
+                    tmpTableResult.Add($"{s.ID}");
+                    tmpTableResult.Add($"{s.TIME}");
+                    tmpTableResult.Add($"{s.DIAMETER}");
+                    tmpTableResult.Add($"{s.POS}");
+                    tmpTableResult.Add($"{s.PASSED}");
+                    tableResult.Add(tmpTableResult);
                 }
             }
-            string result = "";
-            for (int num = 0; num < 10; num++)
-            {
-                result += $"{{\"IDS\":\"{ids[num]}\",\"DIAMETERS\":\"{diameters[num]}\"}},";
-            }
-            result = result.TrimEnd(',');
-            result = "[" + result + "]";
-            ViewData["ids"] = string.Join(",",ids);
-            ViewData["diameters"] = string.Join(",", diameters);
-            ViewData["json"] = result;
+            tableResult.Reverse();
+            ViewData["tableResult"] = tableResult;
             return View();
         }
 
-        //取N条JSON记录
-        public ActionResult<string> GetJSON(int N=100)
+        //图表查询
+        public ActionResult<string> Charts()
         {
-            var ins = DBAccess.GetRecord().ToList();
+            return View();
+        }
+        
+
+        //取N条JSON记录
+        public ActionResult<string> GetJSON(int N=100, string pos ="All" )
+        {
+            List<string> Device = new List<string>();
+            StreamReader DeviceConfig = new StreamReader("Device.cnf", Encoding.Default);
+            String line;
+            while ((line = DeviceConfig.ReadLine()) != null)
+            {
+                Device.Add(line.ToString());
+            }
+
+            List<Record> ins = DBAccess.GetRecord().ToList();
+            if (pos != "All")
+            {
+                ins = DBAccess.GetRecordByPos(pos).ToList();
+            }
+            
             if (ins.Count() < N)
                 N = ins.Count();
             var results = new Record[N];
@@ -109,6 +105,42 @@ namespace WebSite.Controllers
             result = result.TrimEnd(',');
             result = "[" + result + "]";
             ViewData["json"] = result;
+            return result;
+        }
+
+        public ActionResult<string> GetStatus()
+        {
+            List<string> Device = new List<string>();
+            StreamReader DeviceConfig = new StreamReader("Device.cnf", Encoding.Default);
+            String line;
+            while ((line = DeviceConfig.ReadLine()) != null)
+            {
+                Device.Add(line.ToString());
+            }
+
+            List<Record> ins;
+            string TimeRecords = "";
+            string result = "";
+
+            foreach (var pos in Device)
+            {
+                ins = DBAccess.GetRecordByPos(pos).ToList();
+                int status;
+                if (ins.Count == 0) continue;
+                DateTime recordTime = ins[0].TIME;
+                DateTime currentTime = DateTime.Now;
+                TimeSpan DiffSeconds = new TimeSpan(currentTime.Ticks - recordTime.Ticks);
+                if (DiffSeconds.TotalSeconds > 30)
+                {
+                    status = 0;
+                }
+                else
+                { 
+                    status = 1;
+                }
+                TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status}}},";
+            }
+            result = "[" + TimeRecords.TrimEnd(',') + "]";
             return result;
         }
 
