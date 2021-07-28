@@ -8,7 +8,7 @@
 
     <fieldset>
         <legend>显示数据条数</legend>
-        <select class="form-select form-select-lg mb-3">
+        <select id="listNum" class="form-select form-select-lg mb-3">
             <option selected value="50">50</option>
             <option value="100">100</option>
             <option value="200">200</option>
@@ -32,31 +32,35 @@
     
     <script type="text/javascript">
         setInterval(function updateTable(){
+            console.log("updateTable started\n");
+            num = $("#listNum").find("option:selected").val();
             $.ajax({
-            type: "GET",
-            contentType: "application/json; charset=utf-8",
-            url: "/DB/GetTableResult?N=100",//&line=line2
-            error: function (data) {
-                alert("Error in getTableResult: " + data);
-            },
-            success: function (data) {
-                jsonArr = JSON.parse(data);
-                if (jsonArr[0].DIAMETER == 0) {
-                    alert("No data!");
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "/DB/GetTableResult?N=" + num,//&line=line2
+                error: function (data) {
+                    alert("Error in getTableResult: " + data);
+                },
+                success: function (data) {
+                    jsonArr = JSON.parse(data);
+                    if (jsonArr[0].DIAMETER == 0) {
+                        alert("No data!");
+                    }
+                    $("#tableBody").html("");
+                    $.each(jsonArr, function (index, value) {
+                        str1 = "<tr>" + 
+                            "<td>" + jsonArr[index].ID + "</td>" +
+                            "<td>" + jsonArr[index].TIME + "</td>" +
+                            "<td>" + jsonArr[index].DIAMETER + "</td>" +
+                            "<td>" + jsonArr[index].POS + "</td>" +
+                            "<td>" + jsonArr[index].PASSED + "</td>" +
+                            "</tr>";
+                        $("#tableBody").append(str1);
+                    });
                 }
-                $("#tableBody").html("");
-                $.each(jsonArr, function (index, value) {
-                    str1 = "<tr>" + 
-                        "<td>" + jsonArr[index].ID + "</td>" +
-                        "<td>" + jsonArr[index].TIME + "</td>" +
-                        "<td>" + jsonArr[index].DIAMETER + "</td>" +
-                        "<td>" + jsonArr[index].POS + "</td>" +
-                        "<td>" + jsonArr[index].PASSED + "</td>" +
-                        "</tr>";
-                    $("#tableBody").append(str1);
-                });
-            }
-            })
-        }, 3000);
+            });
+            console.log("updateTable ended\n");
+            return updateTable;
+        }(), 3000);
     </script>
 </body>
