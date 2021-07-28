@@ -19,7 +19,7 @@
 
 <script>
     var jsonArr = [];
-    var cssArr = jsonArr;
+    var cssArr = [];
 
     setInterval(function () {
         $.ajax({
@@ -31,24 +31,21 @@
             },
             success: function (data) {
                 jsonArr = JSON.parse(data);
+                cssArr = JSON.parse(data);
+                if (jsonArr[0] == null) {
+                    alert("等待数据...");
+                }
+                for (var i = 0; i < jsonArr.length; i++) {
+                    cssArr[i].POS = "<a href=" + "/DB/Charts?POS=" + jsonArr[i].POS + ">" + jsonArr[i].POS + "</a>";
+                    if (jsonArr[i].Status == 0) {
+                        cssArr[i].Status = "<span class='badge bg-danger text-white'>" + "离线" + "</span>";
+                    }
+                    else {
+                        cssArr[i].Status = "<span class='badge bg-info text-white'>" + "在线" + "</span>";
+                    }
+                }
             }
         })
-        if (jsonArr[0] == null) {
-            alert("等待数据...");
-        }
-
-        cssArr = jsonArr;
-        for (var i = 0; i < cssArr.length; i++)
-        {
-            cssArr[i].POS = "<a href=" + "/DB/GetCharts?POS=" + jsonArr[i].POS + ">" + jsonArr[i].POS + "</a>";
-            if (jsonArr[i].Status == 0) {
-                cssArr[i].Status = "<span class='badge bg-danger text-white'>" + "离线" + "</span>";
-            }
-            else
-            {
-                cssArr[i].Status = "<span class='badge bg-info text-white'>" + "在线" + "</span>";
-            }
-        }
 
         RefreshTable();
 
@@ -80,6 +77,5 @@
 
             return row;
         }
-
-    }, 3000);
+    }, 500);
 </script>

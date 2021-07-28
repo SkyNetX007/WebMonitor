@@ -61,8 +61,9 @@ namespace WebSite.Controllers
         }
 
         //图表查询
-        public ActionResult<string> Charts()
+        public ActionResult<string> Charts(string pos = "")
         {
+            ViewData["POS"] = pos;
             return View();
         }
         
@@ -127,7 +128,7 @@ namespace WebSite.Controllers
                 ins = DBAccess.GetRecordByPos(pos).ToList();
                 int status;
                 if (ins.Count == 0) continue;
-                DateTime recordTime = ins[0].TIME;
+                DateTime recordTime = ins[ins.Count-1].TIME;
                 DateTime currentTime = DateTime.Now;
                 TimeSpan DiffSeconds = new TimeSpan(currentTime.Ticks - recordTime.Ticks);
                 if (DiffSeconds.TotalSeconds > 30)
@@ -141,6 +142,34 @@ namespace WebSite.Controllers
                 TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status}}},";
             }
             result = "[" + TimeRecords.TrimEnd(',') + "]";
+            return result;
+        }
+
+        public ActionResult<string> DataCheck()
+        {
+            var ins = DBAccess.GetRecord();
+            var result = "";
+            //StreamWriter LogFile = new StreamWriter("Status.log");
+            if (ins.Count() != 0)
+            {
+                foreach (var s in ins)
+                {
+                    if (s.DIAMETER > 4.8)
+                    {
+                        TimeSpan DiffSeconds = new TimeSpan(DateTime.Now.Ticks - s.TIME.Ticks);
+                        if (DiffSeconds.TotalSeconds < 60)
+                        {
+                            result += $"{{\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},";
+                        }
+                        //LogFile.WriteLine($"{{{s.TIME}:\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},");
+                    }
+                }
+                result = "[" + result.TrimEnd(',') + "]";
+            }
+            else
+            {
+                result = "[]";
+            }
             return result;
         }
 
