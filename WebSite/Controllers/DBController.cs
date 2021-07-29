@@ -40,27 +40,7 @@ namespace WebSite.Controllers
         //取全部记录
         public ActionResult<string> Gets()
         {
-            /*
-            List<List<string>> tableResult = new List<List<string>>();
-            var ins = DBAccess.GetRecord();
-            if (ins.Count() != 0)
-            {
-                foreach (var s in ins)
-                {
-                    List<string> tmpTableResult = new List<string>();
-                    tmpTableResult.Add($"{s.ID}");
-                    tmpTableResult.Add($"{s.TIME}");
-                    tmpTableResult.Add($"{s.DIAMETER}");
-                    tmpTableResult.Add($"{s.POS}");
-                    tmpTableResult.Add($"{s.PASSED}");
-                    tableResult.Add(tmpTableResult);
-                }
-            }
-            tableResult.Reverse();
-            ViewData["tableResult"] = tableResult;
-            */
-            ViewData["Upper"] = 4.8;
-            ViewData["deviceList"] = "line1,line2,line3,_all";
+            ViewData["deviceList"] = GetDevicelist("Device.cnf");
             return View();
         }
 
@@ -68,13 +48,13 @@ namespace WebSite.Controllers
         public ActionResult<string> Charts(string pos = "_all")
         {
             ViewData["POS"] = pos;
-            ViewData["deviceList"] = "line1,line2,line3";
+            ViewData["deviceList"] = GetDevicelist("Device.cnf");
             return View();
         }
         
 
         //取N条JSON记录
-        public ActionResult<string> GetJSON(int N=100, string pos = "_all", string queryType = "_none", double queryVal = 4.8, string querySym = "equal")
+        public ActionResult<string> GetJSON(int N=100, string pos = "_all", string filterElement = "_none", string filterType = "BETWEEN", string incUp = "true", string incLow = "true", double upperLimit = 0, double lowerLimit = 0)
         {
             var ins = DBAccess.GetRecord().ToList();
 
@@ -82,9 +62,43 @@ namespace WebSite.Controllers
             {
                 ins.RemoveAll(n => n.POS != pos);
             }
-            if (queryType != "_none")
+            if (filterElement != "_none")
             {
-                ins.RemoveAll(n => n.DIAMETER <= queryVal);
+                //改变比较数值类型
+                Func<Record, double> func = x => 0;
+                if (filterElement == "DIAMETER")
+                {
+                    func = x => x.DIAMETER;
+                }
+
+                if (filterType == "BETWEEN")
+                {
+                    if (incUp == "false")
+                        ins.RemoveAll(n => func(n) == upperLimit);
+                    if (incLow == "false")
+                        ins.RemoveAll(n => func(n) == lowerLimit);
+                    ins.RemoveAll(n => (func(n) < lowerLimit || func(n) > upperLimit));
+                }
+                else if (filterType == "EXCEPT")
+                {
+                    if (incUp == "false")
+                        ins.RemoveAll(n => func(n) == upperLimit);
+                    if (incLow == "false")
+                        ins.RemoveAll(n => func(n) == lowerLimit);
+                    ins.RemoveAll(n => (func(n) > lowerLimit && func(n) < upperLimit));
+                }
+                else if (filterType == "GREATER")
+                {
+                    if (incLow == "false")
+                        ins.RemoveAll(n => func(n) == lowerLimit);
+                    ins.RemoveAll(n => func(n) < lowerLimit);
+                }
+                else if (filterType == "LESS")
+                {
+                    if (incUp == "false")
+                        ins.RemoveAll(n => func(n) == upperLimit);
+                    ins.RemoveAll(n => func(n) > upperLimit);
+                }
             }
             if (ins.Count < N || N == -1)
                 N = ins.Count();
@@ -147,7 +161,7 @@ namespace WebSite.Controllers
             return result;
         }
 
-        public ActionResult<string> DataCheck()
+        public ActionResult<string> DataCheck(double upperLimit = 4.8)
         {
             var ins = DBAccess.GetRecord();
             var result = "";
@@ -156,7 +170,7 @@ namespace WebSite.Controllers
             {
                 foreach (var s in ins)
                 {
-                    if (s.DIAMETER > 4.8)
+                    if (s.DIAMETER > upperLimit)
                     {
                         TimeSpan DiffSeconds = new TimeSpan(DateTime.Now.Ticks - s.TIME.Ticks);
                         if (DiffSeconds.TotalSeconds < 60)
@@ -187,6 +201,18 @@ namespace WebSite.Controllers
             }
 
             return result;
+        }
+
+        public string GetDevicelist(string config = "Device.cnf")
+        {
+            string deviceLists = "";
+            StreamReader DeviceConfig = new StreamReader(config, Encoding.Default);
+            String line;
+            while ((line = DeviceConfig.ReadLine()) != null)
+            {
+                deviceLists = deviceLists + line + ",";
+            }
+            return deviceLists.TrimEnd(',');
         }
     }
 }
