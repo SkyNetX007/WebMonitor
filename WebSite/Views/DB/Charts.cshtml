@@ -3,17 +3,51 @@
 }
 
 <body>
-    <script src="https://cdn.staticfile.org/echarts/5.1.2/echarts.min.js"></script>
+    <div align="right">
+        显示数据条数：
+        <select id="listNum" class="form-select">
+            <option value="50">50</option>
+            <option selected value="100">100</option>
+            <option value="200">200</option>
+            <option value="-1">所有</option>
+        </select>
+    </div>
+
+    <div align="right">
+        设备记录筛选：
+        <select id="deviceSelect" class="form-select" onchange="updateDataSrc()">
+            <option value="line1">line1</option>
+            <option value="line2">line2</option>
+            <option value="line3">line3</option>
+            <option selected value="_all">所有</option>
+        </select>
+    </div>
+
     <div id="main" style="width: 1200px;height:600px;"></div>
 
+    <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.staticfile.org/echarts/5.1.2/echarts.min.js"></script>
     <script type="text/javascript">
-        var TableTitle = "@ViewData["pos"]";
-        var QueryUrl = "/DB/GetJSON?N=50&POS=" + "@ViewData["pos"]";
-        if (TableTitle == "")
-        {
-            TableTitle = "所有数据";
-            QueryUrl = "/DB/GetJSON?N=50"
+
+        var QueryUrl = "/DB/GetJSON";
+        var deviceList = "@ViewData["deviceList"]".split(',');
+        deviceList.push("全部");
+        var defaultPos = "@ViewData["pos"]";
+        if (defaultPos == "_all") {
+            defaultPos = "全部";
         }
+        $("#deviceSelect").empty();
+        $.each(deviceList, function (index, value) {
+            if (deviceList[index] == defaultPos) {
+                liststr = "<option selected value=" + deviceList[index] + ">" + deviceList[index] + "</option>";
+            }
+            else {
+                liststr = "<option value=" + deviceList[index] + ">" + deviceList[index] + "</option>";
+            }
+            $("#deviceSelect").append(liststr);
+        });
+
+        var TableTitle = "@ViewData["pos"]";
 
         var jsonArr = [];
         var nameData = [];
@@ -45,29 +79,36 @@
             }]
         };
 
-        setInterval(function () {
-            //alert("刷新！！");
-            $.ajax({//发送请求
-            type: "GET",
-            contentType: "application/json; charset=utf-8",
+        myChart.setOption(option);
+
+        updateData();
+
+        function updateData() {
+
+            num = $("#listNum").find("option:selected").val();
+            selectedDevice = $("#deviceSelect").find("option:selected").val();
+            if (selectedDevice == "全部") {
+                QueryUrl = "/DB/GetJSON?POS=_all&N=" + num;
+            } else { QueryUrl = "/DB/GetJSON?POS=" + selectedDevice + "&N=" + num; }
+
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
                 url: QueryUrl,
-            error: function (data) {
-                alert("出错了！！:" + data);
-            },
-            success: function (data) {
-                //console.log(data);
-                jsonArr = JSON.parse(data);
-            }
-            })
-            if (jsonArr.length == 0) {
-                alert("没有数据！");
-            }
-            console.log(jsonArr);
-            $.each(jsonArr, function (index, value) {
-                nameData[index] = jsonArr[index].ID;
-                seriesData[index] = jsonArr[index].DIAMETER;
+                error: function (data) {
+                    alert("出错了！！:" + data);
+                },
+                success: function (data) {
+                    jsonArr = JSON.parse(data);
+                    nameData.length = 0;
+                    seriesData.length = 0;
+                    $.each(jsonArr, function (index, value) {
+                        nameData[index] = jsonArr[index].ID;
+                        seriesData[index] = jsonArr[index].DIAMETER;
+                    });
+                }
             });
-            // 指定图表的配置项和数据
+
             myChart.setOption({
                 xAxis: {
                     data: nameData
@@ -76,11 +117,15 @@
                     data: seriesData
                 }]
             });
-        }, 500);
-        myChart.setOption(option);
-        window.onresize = function () {
-            myChart.resize();
-        };
+
+            setTimeout(updateData, 1000);
+        }
+
+        function updateDataSrc() {
+            var newUrl = "/DB/Charts?POS=" + $("#deviceSelect").find("option:selected").val();
+            document.location.assign(newUrl);
+        }
+
     </script>
 
 </body>

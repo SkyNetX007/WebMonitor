@@ -17,11 +17,15 @@
     <p>项目地址：<a href="https://gitee.com/SkyNetX007/WebMonitor/">https://gitee.com/SkyNetX007/WebMonitor/</a></p>
 </div>
 
-<script>
+<script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
+<script type="text/javascript">
     var jsonArr = [];
     var cssArr = [];
 
-    setInterval(function () {
+    updateData();
+
+    function updateData() {
+
         $.ajax({
             type: "GET",
             contentType: "application/json; charset=utf-8",
@@ -44,38 +48,41 @@
                         cssArr[i].Status = "<span class='badge bg-info text-white'>" + "在线" + "</span>";
                     }
                 }
+
+                RefreshTable();
             }
-        })
+        });
 
-        RefreshTable();
+        setTimeout(updateData, 1000);
+    }
 
-        function RefreshTable() {
-            var tbody = document.getElementById('StatusTable');
+    function RefreshTable() {
+        var tbody = document.getElementById('StatusTable');
 
-            $("#StatusTable").empty();
+        $("#StatusTable").empty();
 
-            for (var i = 0; i < cssArr.length; i++) { //遍历一下json数据
-                var trow = getDataRow(cssArr[i]); //定义一个方法,返回tr数据
-                tbody.appendChild(trow);
-            }
+        for (var i = 0; i < cssArr.length; i++) { //遍历一下json数据
+            var trow = getDataRow(cssArr[i]); //定义一个方法,返回tr数据
+            tbody.appendChild(trow);
         }
+    }
 
-        function getDataRow(h) {
-            var row = document.createElement('tr'); //创建行  
+    function getDataRow(h) {
+        var row = document.createElement('tr'); //创建行
 
-            var POSCell = document.createElement('td'); //创建第一列POS
-            POSCell.innerHTML = h.POS; //填充数据
-            row.appendChild(POSCell); //加入行
+        var POSCell = document.createElement('td'); //创建第一列POS
+        POSCell.innerHTML = h.POS; //填充数据
+        row.appendChild(POSCell); //加入行
 
-            var RecordTimeCell = document.createElement('td');
-            RecordTimeCell.innerHTML = h.RecordTime;
-            row.appendChild(RecordTimeCell);
+        var RecordTimeCell = document.createElement('td');
+        RecordTimeCell.innerHTML = h.RecordTime;
+        row.appendChild(RecordTimeCell);
 
-            var StatusCell = document.createElement('td');
-            StatusCell.innerHTML = h.Status;
-            row.appendChild(StatusCell);
+        var StatusCell = document.createElement('td');
+        StatusCell.innerHTML = h.Status;
+        row.appendChild(StatusCell);
 
-            return row;
-        }
-    }, 500);
+        return row;
+    }
+
 </script>
