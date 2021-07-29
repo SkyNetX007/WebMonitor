@@ -189,16 +189,50 @@ namespace WebSite.Controllers
             return result;
         }
 
-        public ActionResult<string> GetTableResult(string line = "_none", string error = "_none", int N = 100)
+        public ActionResult<string> GetTableResult(string line = "_none", string filterElement = "_none", string filterType = "BETWEEN", string incUp = "true", string incLow = "true", double upperLimit = 0, double lowerLimit = 0, int N = 100)
         {
             var ins = DBAccess.GetRecord().ToList();
             if (line != "_none")
             {
                 ins.RemoveAll(n => n.POS != line);
             }
-            if (error == "DIAMETER")
+            if (filterElement != "_none")
             {
-                ins.RemoveAll(n => n.DIAMETER <= 4.9);
+                //改变比较数值类型
+                Func<Record, double> func = x => 0;
+                if (filterElement == "DIAMETER")
+                {
+                    func = x => x.DIAMETER;
+                }
+
+                if (filterType == "BETWEEN")
+                {
+                    if (incUp == "false")
+                        ins.RemoveAll(n => func(n) == upperLimit);
+                    if (incLow == "false")
+                        ins.RemoveAll(n => func(n) == lowerLimit);
+                    ins.RemoveAll(n => (func(n) < lowerLimit || func(n) > upperLimit));
+                }
+                else if (filterType == "EXCEPT")
+                {
+                    if (incUp == "false")
+                        ins.RemoveAll(n => func(n) == upperLimit);
+                    if (incLow == "false")
+                        ins.RemoveAll(n => func(n) == lowerLimit);
+                    ins.RemoveAll(n => (func(n) > lowerLimit && func(n) < upperLimit));
+                }
+                else if (filterType == "GREATER")
+                {
+                    if (incLow == "false")
+                        ins.RemoveAll(n => func(n) == lowerLimit);
+                    ins.RemoveAll(n => func(n) < lowerLimit);
+                }
+                else if (filterType == "LESS")
+                {
+                    if (incUp == "false")
+                        ins.RemoveAll(n => func(n) == upperLimit);
+                    ins.RemoveAll(n => func(n) > upperLimit);
+                }
             }
             if (ins.Count < N || N == -1)
                 N = ins.Count;

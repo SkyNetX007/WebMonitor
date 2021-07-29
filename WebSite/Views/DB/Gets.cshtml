@@ -4,7 +4,7 @@
 
 <body>
     <div align="right">
-        显示数据条数：
+        <label for="listNum">显示数据条数：</label>
         <select id="listNum" class="form-select" onchange="listUpdate()">
             <option selected value="50">50</option>
             <option value="100">100</option>
@@ -13,17 +13,41 @@
         </select>
     </div>
     <div align="right">
-        按设备筛选：
+        <label for="deviceSelect">按设备筛选：</label>
         <select id="deviceSelect" class="form-select" onchange="listUpdate()">
             <option selected value="_none">所有</option>
         </select>
     </div>
     <div align="right">
-        按异常筛选：
-        <select id="errorSelect" class="form-select" onchange="listUpdate()">
-            <option selected value="_none">不筛选</option>
-            <option value="DIAMETER">半径异常</option>
-        </select>
+        <fieldset class="form-group p-3">
+            <div>
+                <label for="filterElementSelect">按数值筛选：</label>
+                <select id="filterElementSelect" class="form-select">
+                    <option selected value="_none">不筛选</option>
+                    <option value="DIAMETER">直径</option>
+                </select>
+                <label for="filterTypeSelect">筛选关系：</label>
+                <select id="filterTypeSelect" class="form-select" onchange="updateFilterType()">
+                    <option selected value="BETWEEN">介于</option>
+                    <option value="EXCEPT">以外</option>
+                    <option value="GREATER">大于</option>
+                    <option value="LESS">小于</option>
+                </select>
+            </div>
+            <div>
+                <form>
+                    <label for="filterLowerLimit">下限：</label><input id="filterLowerLimit" value="0"></input>
+                    <label for="filterIncludeLowerLimit">包括下限</label><input id="filterIncludeLowerLimit" type="checkbox"></input>
+		    	</form>
+                <form>
+                    <label for="filterUpperLimit">上限：</label><input id="filterUpperLimit" value="0"></input>
+                    <label for="filterIncludeUpperLimit">包括上限</label><input id="filterIncludeUpperLimit" type="checkbox"></input>
+		    	</form>
+		    </div>
+            <div>
+               <button id="filterApplyButton" type="button" class="btn btn-outline-dark">应用数值筛选</button>
+		    </div>
+        </fieldset>
     </div>
 
     <legend>数据条目</legend>
@@ -49,7 +73,9 @@
         $.ajax({
             type: "GET",
             contentType: "application/json; charset=utf-8",
-            url: "/DB/GetTableResult?N=" + num + "&line=" + selectedDevice + "&error=" + selectedError,
+            url: "/DB/GetTableResult?N=" + num + "&line=" + selectedDevice +
+                "&filterElement=" + filterElement + "&filterType=" + filterType + "&upperLimit=" + upperLimitFloat + "&lowerLimit=" + lowerLimitFloat + 
+                "&incUp=" + includeUpperLimit + "&incLow" + includeLowerLimit,
             error: function (data) {
                 alert("Error in getTableResult: " + data);
             },
@@ -74,7 +100,6 @@
         });
         setTimeout(updateTable, 3000);
     }
-
     function updateDevice(){
         $.ajax({
             type: "GET",
@@ -104,12 +129,50 @@
         });
         setTimeout(updateDevice, 3000);
     }
-
     function listUpdate(){
         updateTable();
     }
+    function updateFilter(){
+        var upperLimit = $("#filterUpperLimit").val();
+        var lowerLimit = $("#filterLowerLimit").val();
+        var tmpUpperLimitFloat = parseFloat(upperLimit);
+        var tmpLowerLimitFloat = parseFloat(lowerLimit);
+        var tmpFilterType = $("#filterTypeSelect").find("option:selected").val();
+        if(isNaN(tmpUpperLimitFloat) || isNaN(tmpLowerLimitFloat)){
+            alert("Invalid input!");
+            return;
+        }
+        if((tmpFilterType == "BETWEEN" || tmpFilterType == "EXCEPT") && (tmpUpperLimitFloat < tmpLowerLimitFloat)){
+            alert("Invalid input!");
+            return;
+        }
+        includeUpperLimit = $("#filterIncludeUpperLimit").get(0).checked;
+        includeLowerLimit = $("#filterIncludeLowerLimit").get(0).checked;
+        filterElement = $("#filterElementSelect").find("option:selected").val();
+        filterType = $("#filterTypeSelect").find("option:selected").val();
+        upperLimitFloat = tmpUpperLimitFloat;
+        lowerLimitFloat = tmpLowerLimitFloat;
+        //console.log(filterElement+", "+filterType+", "+upperLimitFloat+", "+lowerLimitFloat+", "+includeUpperLimit+", "+includeLowerLimit+", \n");
+        updateTable();
+    }
+    function updateFilterType(){
+        var tmpFilterType = $("#filterTypeSelect").find("option:selected").val();
+        if(tmpFilterType == "BETWEEN" || tmpFilterType == "EXCEPT"){
+            $("#filterUpperLimit").attr("disabled", false);
+            $("#filterLowerLimit").attr("disabled", false);
+        }else if(tmpFilterType == "GREATER"){
+            $("#filterUpperLimit").attr("disabled", true);
+            $("#filterLowerLimit").attr("disabled", false);
+        }else if(tmpFilterType == "LESS"){
+            $("#filterUpperLimit").attr("disabled", false);
+            $("#filterLowerLimit").attr("disabled", true);
+        }
+    }
 
     //Main(?)
+    var filterElement = "_none", filterType = "BETWEEN", includeUpperLimit = "true", includeLowerLimit = "true";
+    var upperLimitFloat = 0, lowerLimitFloat = 0;
+    $('#filterApplyButton').click(updateFilter);
     updateTable();
     updateDevice();
 </script>
