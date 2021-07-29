@@ -40,6 +40,7 @@ namespace WebSite.Controllers
         //取全部记录
         public ActionResult<string> Gets()
         {
+            /*
             List<List<string>> tableResult = new List<List<string>>();
             var ins = DBAccess.GetRecord();
             if (ins.Count() != 0)
@@ -57,36 +58,37 @@ namespace WebSite.Controllers
             }
             tableResult.Reverse();
             ViewData["tableResult"] = tableResult;
+            */
+            ViewData["Upper"] = 4.8;
+            ViewData["deviceList"] = "line1,line2,line3,_all";
             return View();
         }
 
         //图表查询
-        public ActionResult<string> Charts(string pos = "")
+        public ActionResult<string> Charts(string pos = "_all")
         {
             ViewData["POS"] = pos;
+            ViewData["deviceList"] = "line1,line2,line3";
             return View();
         }
         
 
         //取N条JSON记录
-        public ActionResult<string> GetJSON(int N=100, string pos ="All" )
+        public ActionResult<string> GetJSON(int N=100, string pos = "_all", string queryType = "_none", double queryVal = 4.8, string querySym = "equal")
         {
-            List<string> Device = new List<string>();
-            StreamReader DeviceConfig = new StreamReader("Device.cnf", Encoding.Default);
-            String line;
-            while ((line = DeviceConfig.ReadLine()) != null)
-            {
-                Device.Add(line.ToString());
-            }
+            var ins = DBAccess.GetRecord().ToList();
 
-            List<Record> ins = DBAccess.GetRecord().ToList();
-            if (pos != "All")
+            if (pos != "_all")
             {
-                ins = DBAccess.GetRecordByPos(pos).ToList();
+                ins.RemoveAll(n => n.POS != pos);
             }
-            
-            if (ins.Count() < N)
+            if (queryType != "_none")
+            {
+                ins.RemoveAll(n => n.DIAMETER <= queryVal);
+            }
+            if (ins.Count < N || N == -1)
                 N = ins.Count();
+
             var results = new Record[N];
             if (ins.Count() != 0)
             {

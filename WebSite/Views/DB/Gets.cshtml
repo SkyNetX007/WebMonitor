@@ -6,29 +6,40 @@
 
 <body>
 
-    <fieldset>
-        <legend>显示数据条数</legend>
-        <select id="listNum" class="form-select form-select-lg mb-3">
+    <div align="right">
+        显示数据条数：
+        <select id="listNum" class="form-select" onchange="updateData()">
             <option selected value="50">50</option>
             <option value="100">100</option>
             <option value="200">200</option>
             <option value="-1">所有</option>
         </select>
-    </fieldset>
+    </div>
+    <div align="right">
+        设备记录筛选：
+        <select id="deviceSelect" class="form-select" onchange="updateData()">
+            <option value="line1">line1</option>
+            <option value="line2">line2</option>
+            <option value="line3">line3</option>
+            <option selected value="_all">所有</option>
+        </select>
+    </div>
 
-    <fildset>
+    
+    <table class="table">
         <legend>数据条目</legend>
-        <table class="table table-striped">
-            <thead>
-            <th>ID</th>
-            <th>TIME</th>
-            <th>DIAMETER</th>
-            <th>POS</th>
-            <th>PASSED</th>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-        </fieldset>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>TIME</th>
+                <th>DIAMETER</th>
+                <th>POS</th>
+                <th>PASSED</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
 </body>
 
 <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
@@ -37,36 +48,40 @@
     var num = $("#listNum").find("option:selected").val();
     var QueryUrl = "/DB/GetJSON";
 
-    setInterval(function updateTable() {
+    updateData();
+
+    function updateData() {
 
         num = $("#listNum").find("option:selected").val();
-        if (num == -1) { num = "999"; }
-        QueryUrl = "/DB/GetJSON?N=" + num;
-
+        selectedDevice = $("#deviceSelect").find("option:selected").val();
         $.ajax({
             type: "GET",
             contentType: "application/json; charset=utf-8",
-            url: QueryUrl,
+            url: "/DB/GetJSON?N=" + num + "&POS=" + selectedDevice,
             error: function (data) {
-                alert("Error in getTableResult: " + data);
+                alert("出错了！！:" + data);
             },
             success: function (data) {
                 jsonArr = JSON.parse(data);
-                if (jsonArr[0].DIAMETER == 0) {
-                    alert("No data!");
-                }
-                $("#tableBody").html("");
+                $("#tableBody").empty();
                 $.each(jsonArr, function (index, value) {
-                    str1 = "<tr>" +
-                        "<td>" + jsonArr[index].ID + "</td>" +
+                    if (jsonArr[index].DIAMETER > @ViewData["Upper"]) {
+                        datastr = "<tr bgcolor=\"bs-danger\">";
+                    } else {
+                        datastr = "<tr>";
+                    }
+                    datastr += "<td>" + jsonArr[index].ID + "</td>" +
                         "<td>" + jsonArr[index].TIME + "</td>" +
                         "<td>" + jsonArr[index].DIAMETER + "</td>" +
                         "<td>" + jsonArr[index].POS + "</td>" +
                         "<td>" + jsonArr[index].PASSED + "</td>" +
                         "</tr>";
-                    $("#tableBody").append(str1);
+                    $("#tableBody").append(datastr);
                 });
             }
-        })
-    }, 3000);
+        });
+
+        setTimeout(updateData, 3000);
+    }
+
 </script>
