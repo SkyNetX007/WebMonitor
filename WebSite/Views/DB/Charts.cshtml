@@ -7,7 +7,14 @@
     <div id="main" style="width: 1200px;height:600px;"></div>
 
     <script type="text/javascript">
-        //var jsonArr = @Html.Raw(@ViewData["json"]);
+        var TableTitle = "@ViewData["pos"]";
+        var QueryUrl = "/DB/GetJSON?N=50&POS=" + "@ViewData["pos"]";
+        if (TableTitle == "")
+        {
+            TableTitle = "所有数据";
+            QueryUrl = "/DB/GetJSON?N=50"
+        }
+
         var jsonArr = [];
         var nameData = [];
         var seriesData = [];
@@ -16,7 +23,7 @@
         var myChart = echarts.init(document.getElementById('main'));
         var option = {
             title: {
-                text: '测试图表'
+                text: TableTitle
             },
             tooltip: {},
             legend: {
@@ -37,13 +44,13 @@
                 data: seriesData
             }]
         };
-        
+
         setInterval(function () {
             //alert("刷新！！");
             $.ajax({//发送请求
             type: "GET",
             contentType: "application/json; charset=utf-8",
-            url: "/DB/GetJSON?N=200",
+                url: QueryUrl,
             error: function (data) {
                 alert("出错了！！:" + data);
             },
@@ -52,7 +59,7 @@
                 jsonArr = JSON.parse(data);
             }
             })
-            if (jsonArr[0].DIAMETER == 0) {
+            if (jsonArr.length == 0) {
                 alert("没有数据！");
             }
             console.log(jsonArr);
@@ -69,10 +76,9 @@
                     data: seriesData
                 }]
             });
-        }, 3000);
+        }, 500);
         myChart.setOption(option);
         window.onresize = function () {
-            resizeWorldMapContainer();
             myChart.resize();
         };
     </script>

@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="zh-cn">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -53,6 +53,64 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script type="text/javascript">
+
+        function notifyMe(title, content) {
+            if (window.Notification && Notification.permission !== "denied") {
+                Notification.requestPermission(function (status) {
+                    var n = new Notification(title, { body: content });
+                });
+            }
+            else {
+                alert(title);
+            }
+        }
+
+        setInterval(function () {
+
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "/DB/GetStatus",
+                error: function (data) {
+                    alert("出错了！！:" + data);
+                },
+                success: function (data) {
+                    statsArr = JSON.parse(data);
+                    if (statsArr.length != 0) {
+                        for (var i = 0; i < statsArr.length; i++) {
+                            if (statsArr[i].Status == 0) {
+                                notifyMe("设备离线", "目前有设备离线！");
+                            }
+                        }
+                    }
+                }
+            })
+
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "/DB/DataCheck",
+                error: function (data) {
+                    alert("出错了！！:" + data);
+                },
+                success: function (data) {
+                    var statsArr = JSON.parse(data);
+                    if (statsArr.length != 0) {
+                        var warningLog = "";
+                        for (var i = 0; i < statsArr.length; i++) {
+                            warningLog += ("设备" + statsArr[i].POS + "出现异常值：" + statsArr[i].DIAMETER + "(ID:" + statsArr[i].ID + ") \n");
+                        }
+                        notifyMe("数据异常！", warningLog);
+                    }
+                }
+            })
+
+        }, 5000);
+
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

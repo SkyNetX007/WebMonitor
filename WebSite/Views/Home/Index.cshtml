@@ -4,5 +4,78 @@
 
 <div class="text-center">
     <h1 class="display-4">钢球检测监控</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>设备</th>
+                <th>最后更新时间</th>
+                <th>状态</th>
+            </tr>
+        </thead>
+        <tbody id="StatusTable"></tbody>
+    </table>
+    <p>项目地址：<a href="https://gitee.com/SkyNetX007/WebMonitor/">https://gitee.com/SkyNetX007/WebMonitor/</a></p>
 </div>
+
+<script>
+    var jsonArr = [];
+    var cssArr = [];
+
+    setInterval(function () {
+        $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: "/DB/GetStatus",
+            error: function (data) {
+                alert("出错了！！:" + data);
+            },
+            success: function (data) {
+                jsonArr = JSON.parse(data);
+                cssArr = JSON.parse(data);
+                if (jsonArr[0] == null) {
+                    alert("等待数据...");
+                }
+                for (var i = 0; i < jsonArr.length; i++) {
+                    cssArr[i].POS = "<a href=" + "/DB/Charts?POS=" + jsonArr[i].POS + ">" + jsonArr[i].POS + "</a>";
+                    if (jsonArr[i].Status == 0) {
+                        cssArr[i].Status = "<span class='badge bg-danger text-white'>" + "离线" + "</span>";
+                    }
+                    else {
+                        cssArr[i].Status = "<span class='badge bg-info text-white'>" + "在线" + "</span>";
+                    }
+                }
+            }
+        })
+
+        RefreshTable();
+
+        function RefreshTable() {
+            var tbody = document.getElementById('StatusTable');
+
+            $("#StatusTable").empty();
+
+            for (var i = 0; i < cssArr.length; i++) { //遍历一下json数据
+                var trow = getDataRow(cssArr[i]); //定义一个方法,返回tr数据
+                tbody.appendChild(trow);
+            }
+        }
+
+        function getDataRow(h) {
+            var row = document.createElement('tr'); //创建行  
+
+            var POSCell = document.createElement('td'); //创建第一列POS
+            POSCell.innerHTML = h.POS; //填充数据
+            row.appendChild(POSCell); //加入行
+
+            var RecordTimeCell = document.createElement('td');
+            RecordTimeCell.innerHTML = h.RecordTime;
+            row.appendChild(RecordTimeCell);
+
+            var StatusCell = document.createElement('td');
+            StatusCell.innerHTML = h.Status;
+            row.appendChild(StatusCell);
+
+            return row;
+        }
+    }, 500);
+</script>

@@ -13,6 +13,9 @@ namespace WebSite.DatabaseAccess
         //取全部记录
         IEnumerable<Record> GetRecord();
 
+        //取某设备记录
+        IEnumerable<Record> GetRecordByPos(string pos);
+
         //取某id记录
         Record GetRecordByID(int id);
 
