@@ -68,10 +68,10 @@ namespace WebSite.Controllers
             ViewData["POS"] = pos;
             return View();
         }
-        
+
 
         //取N条JSON记录
-        public ActionResult<string> GetJSON(int N=100, string pos ="All" )
+        public ActionResult<string> GetJSON(int N = 100, string pos = "All")
         {
             List<string> Device = new List<string>();
             StreamReader DeviceConfig = new StreamReader("Device.cnf", Encoding.Default);
@@ -86,7 +86,7 @@ namespace WebSite.Controllers
             {
                 ins = DBAccess.GetRecordByPos(pos).ToList();
             }
-            
+
             if (ins.Count() < N)
                 N = ins.Count();
             var results = new Record[N];
@@ -130,7 +130,7 @@ namespace WebSite.Controllers
                 ins = DBAccess.GetRecordByPos(pos).ToList();
                 int status;
                 if (ins.Count == 0) continue;
-                DateTime recordTime = ins[ins.Count-1].TIME;
+                DateTime recordTime = ins[ins.Count - 1].TIME;
                 DateTime currentTime = DateTime.Now;
                 TimeSpan DiffSeconds = new TimeSpan(currentTime.Ticks - recordTime.Ticks);
                 if (DiffSeconds.TotalSeconds > 30)
@@ -138,7 +138,7 @@ namespace WebSite.Controllers
                     status = 0;
                 }
                 else
-                { 
+                {
                     status = 1;
                 }
                 TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status}}},";
@@ -189,12 +189,16 @@ namespace WebSite.Controllers
             return result;
         }
 
-        public ActionResult<string> GetTableResult(string line = "_none", int N = 100)
+        public ActionResult<string> GetTableResult(string line = "_none", string error = "_none", int N = 100)
         {
             var ins = DBAccess.GetRecord().ToList();
             if (line != "_none")
             {
                 ins.RemoveAll(n => n.POS != line);
+            }
+            if (error == "DIAMETER")
+            {
+                ins.RemoveAll(n => n.DIAMETER <= 4.9);
             }
             if (ins.Count < N || N == -1)
                 N = ins.Count;

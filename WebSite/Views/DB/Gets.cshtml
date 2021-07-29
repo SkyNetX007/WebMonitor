@@ -9,21 +9,25 @@
             <option selected value="50">50</option>
             <option value="100">100</option>
             <option value="200">200</option>
-            <option value="-1">所有</option>
+            <option value="500">500</option>
         </select>
     </div>
     <div align="right">
-        设备记录筛选：
+        按设备筛选：
         <select id="deviceSelect" class="form-select" onchange="listUpdate()">
-            <option value="line1">line1</option>
-            <option value="line2">line2</option>
-            <option value="line3">line3</option>
             <option selected value="_none">所有</option>
+        </select>
+    </div>
+    <div align="right">
+        按异常筛选：
+        <select id="errorSelect" class="form-select" onchange="listUpdate()">
+            <option selected value="_none">不筛选</option>
+            <option value="DIAMETER">半径异常</option>
         </select>
     </div>
 
     <legend>数据条目</legend>
-    <table class="table table-striped">
+    <table class="table">
         <thead>
             <th>ID</th>
             <th>TIME</th>
@@ -41,32 +45,64 @@
     function updateTable(){
         num = $("#listNum").find("option:selected").val();
         selectedDevice = $("#deviceSelect").find("option:selected").val();
+        selectedError = $("#errorSelect").find("option:selected").val();
         $.ajax({
             type: "GET",
             contentType: "application/json; charset=utf-8",
-            url: "/DB/GetTableResult?N=" + num + "&line=" + selectedDevice,
+            url: "/DB/GetTableResult?N=" + num + "&line=" + selectedDevice + "&error=" + selectedError,
             error: function (data) {
                 alert("Error in getTableResult: " + data);
             },
             success: function (data) {
                 jsonArr = JSON.parse(data);
-                //if (jsonArr[0].DIAMETER == 0) {
-                //    alert("No data!");
-                //}
                 $("#tableBody").html("");
                 $.each(jsonArr, function (index, value) {
-                    str1 = "<tr>" + 
-                        "<td>" + jsonArr[index].ID + "</td>" +
-                        "<td>" + jsonArr[index].TIME + "</td>" +
-                        "<td>" + jsonArr[index].DIAMETER + "</td>" +
-                        "<td>" + jsonArr[index].POS + "</td>" +
-                        "<td>" + jsonArr[index].PASSED + "</td>" +
-                        "</tr>";
+                    if(jsonArr[index].DIAMETER > 4.9){
+                        str1 = "<tr bgcolor=\"bs-danger\">";
+                    }else{
+                        str1 = "<tr>";
+                    }
+                    str1 += "<td>" + jsonArr[index].ID + "</td>" +
+                            "<td>" + jsonArr[index].TIME + "</td>" +
+                            "<td>" + jsonArr[index].DIAMETER + "</td>" +
+                            "<td>" + jsonArr[index].POS + "</td>" +
+                            "<td>" + jsonArr[index].PASSED + "</td>" +
+                            "</tr>";
                     $("#tableBody").append(str1);
                 });
             }
         });
         setTimeout(updateTable, 3000);
+    }
+
+    function updateDevice(){
+        $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: "/DB/GetStatus",
+            error: function (data) {
+                alert("Error in updateDevice:" + data);
+            },
+            success: function (data) {
+                jsonArr = JSON.parse(data);
+                selectedDevice = $("#deviceSelect").find("option:selected").val();
+                if(selectedDevice=="_none"){
+                    selectedName = "所有";
+                }else{
+                    selectedName = selectedDevice;
+                }
+                $("#deviceSelect").html("<option selected value=\"" + selectedDevice + "\">" + selectedName + "</option>");
+                for (var i = 0; i < jsonArr.length; i++) {
+                    if(selectedDevice != jsonArr[i].POS){
+                        $("#deviceSelect").append("<option value=\"" + jsonArr[i].POS + "\">" + jsonArr[i].POS + "</option>");
+                    }
+                }
+                if(selectedDevice != "_none"){
+                    $("#deviceSelect").append("<option value=\"_none\">所有</option>");
+                }
+            }
+        });
+        setTimeout(updateDevice, 3000);
     }
 
     function listUpdate(){
@@ -75,4 +111,5 @@
 
     //Main(?)
     updateTable();
+    updateDevice();
 </script>
