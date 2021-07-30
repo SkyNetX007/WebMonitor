@@ -54,7 +54,7 @@ namespace WebSite.Controllers
 
 
         //取N条JSON记录
-        public ActionResult<string> GetJSON(int N=100, string pos = "_all", string filterElement = "_none", string filterType = "BETWEEN", string incUp = "true", string incLow = "true", double upperLimit = 0, double lowerLimit = 0)
+        public ActionResult<string> GetJSON(int N = 100, string pos = "_all", string filterElement = "_none", string filterType = "BETWEEN", string incUp = "true", string incLow = "true", double upperLimit = 0, double lowerLimit = 0)
         {
             var ins = DBAccess.GetRecord().ToList();
 
