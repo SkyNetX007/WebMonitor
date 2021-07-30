@@ -220,7 +220,7 @@ namespace WebSite.Controllers
             return result;
         }
 
-        public ActionResult<string> GetTableResult(string line = "_none", string filters = "", int N = 100)
+        public ActionResult<string> GetTableResult(string line = "_none", string filters = "{\"filters\":[]}", int N = 100)
         {
             var ins = DBAccess.GetRecord().ToList();
             if (line != "_none")
