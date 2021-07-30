@@ -155,7 +155,7 @@ namespace WebSite.Controllers
                 { 
                     status = 1;
                 }
-                TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status}}},";
+                TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status},\"TotalRecords\":{ins.Count}}},";
             }
             result = "[" + TimeRecords.TrimEnd(',') + "]";
             return result;

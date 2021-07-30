@@ -2,25 +2,39 @@
     ViewData["Title"] = "Gets";
 }
 
+<head>
+
+    <link rel="stylesheet" href="~/css/jsDate.css" />
+    <style type="text/css">
+
+        .select, .filter {
+            display: inline-block;
+        }
+    </style>
+
+</head>
+
 <body>
     <div align="right">
-        <label for="listNum">显示数据条数：</label>
-        <select id="listNum" class="form-select" onchange="listUpdate()">
-            <option selected value="50">50</option>
-            <option value="100">100</option>
-            <option value="200">200</option>
-            <option value="500">500</option>
-        </select>
-    </div>
-    <div align="right">
-        <label for="deviceSelect">按设备筛选：</label>
-        <select id="deviceSelect" class="form-select" onchange="listUpdate()">
-            <option selected value="_all">所有</option>
-        </select>
+        <div class="select" align="left">
+            <label for="listNum">显示数据条数：</label>
+            <select id="listNum" class="form-select" onchange="listUpdate()">
+                <option selected value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+        <div class="select" align="right">
+            <label for="deviceSelect">按设备筛选：</label>
+            <select id="deviceSelect" class="form-select" onchange="listUpdate()">
+                <option selected value="_all">所有</option>
+            </select>
+        </div>
     </div>
     <div align="right">
         <fieldset class="form-group p-3">
-            <div>
+            <div class="filter">
                 <label for="filterElementSelect">按数值筛选：</label>
                 <select id="filterElementSelect" class="form-select">
                     <option selected value="_all">不筛选</option>
@@ -34,7 +48,7 @@
                     <option value="LESS">小于</option>
                 </select>
             </div>
-            <div>
+            <div class="filter">
                 <form>
                     <label for="filterLowerLimit">下限：</label><input id="filterLowerLimit" value="0"></input>
                     <label for="filterIncludeLowerLimit">包括下限</label><input id="filterIncludeLowerLimit" type="checkbox"></input>
@@ -48,6 +62,18 @@
                 <button id="filterApplyButton" type="button" class="btn btn-outline-dark">应用数值筛选</button>
             </div>
         </fieldset>
+    </div>
+
+    <div>
+
+        <div style="text-align:center;margin-top:5px;">
+            <span>日期 起始</span>
+            <input type="text" id="dateBegin" />
+        </div>
+        <div style="text-align:center;margin-top:5px;">
+            <span>日期 终止</span>
+            <input type="text" id="dateEnd" />
+        </div>
     </div>
 
     <legend>数据条目</legend>
@@ -64,6 +90,7 @@
 </body>
 
 <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
+<script type="text/javascript" src="~/js/site.js"></script>
 <script type="text/javascript">
     //Function Definitions
     function updateTable() {
@@ -175,4 +202,23 @@
     $('#filterApplyButton').click(updateFilter);
     updateTable();
     updateDevice();
+</script>
+
+<script type="text/javascript">
+
+    var today = new Date();
+    var dateBegin = "1970-01-01";
+    var dateEnd = today.getFullYear() + "-" + today.getMonth().toString().padStart(2, '0') + "-" + (today.getDate()-1).toString().padStart(2, '0');
+
+    $('#dateBegin').jHsDate({
+        callBack: function () {
+            dateBegin = $('#dateBegin').val();
+        }
+    });
+    $('#dateEnd').jHsDate({
+        callBack: function () {
+            dateEnd = $('#dateEnd').val();
+        }
+    });
+
 </script>

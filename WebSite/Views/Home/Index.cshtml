@@ -8,6 +8,7 @@
         <thead>
             <tr>
                 <th>设备</th>
+                <th>记录数</th>
                 <th>最后更新时间</th>
                 <th>状态</th>
             </tr>
@@ -73,6 +74,10 @@
         var POSCell = document.createElement('td'); //创建第一列POS
         POSCell.innerHTML = h.POS; //填充数据
         row.appendChild(POSCell); //加入行
+
+        var TotalRecordsCell = document.createElement('td');
+        TotalRecordsCell.innerHTML = h.TotalRecords;
+        row.appendChild(TotalRecordsCell);
 
         var RecordTimeCell = document.createElement('td');
         RecordTimeCell.innerHTML = h.RecordTime;
