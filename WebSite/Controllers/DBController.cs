@@ -27,6 +27,18 @@ namespace WebSite.Controllers
         public filter[] filters;
     }
 
+    public class config
+    {
+        public string name = "default";
+        public string deviceList;
+        public double warningVal;
+    }
+
+    public class configSet
+    {
+        public config[] configs;
+    }
+
     public class DBController : Controller
     {
         private IDBAccess DBAccess;
@@ -57,7 +69,8 @@ namespace WebSite.Controllers
         //取全部记录
         public ActionResult<string> Gets()
         {
-            ViewData["deviceList"] = GetDevicelist("Device.cnf");
+            ViewData["deviceList"] = GetDeviceCnf("Device.cnf").deviceList;
+            ViewData["warningVal"] = GetDeviceCnf("Device.cnf").warningVal;
             return View();
         }
 
@@ -65,7 +78,7 @@ namespace WebSite.Controllers
         public ActionResult<string> Charts(string pos = "_all")
         {
             ViewData["POS"] = pos;
-            ViewData["deviceList"] = GetDevicelist("Device.cnf");
+            ViewData["deviceList"] = GetDeviceCnf("Device.cnf").deviceList;
             return View();
         }
 
@@ -151,13 +164,8 @@ namespace WebSite.Controllers
         //设备状态
         public ActionResult<string> GetStatus()
         {
-            List<string> Device = new List<string>();
-            StreamReader DeviceConfig = new StreamReader("Device.cnf", Encoding.Default);
-            String line;
-            while ((line = DeviceConfig.ReadLine()) != null)
-            {
-                Device.Add(line.ToString());
-            }
+            string deviceList = GetDeviceCnf("Device.cnf").deviceList;
+            List<string> Device = deviceList.Split(",",StringSplitOptions.RemoveEmptyEntries).ToList();
 
             List<Record> ins;
             string TimeRecords = "";
@@ -189,6 +197,7 @@ namespace WebSite.Controllers
         {
             var ins = DBAccess.GetRecord();
             var result = "";
+            upperLimit = GetDeviceCnf("Device.cnf").warningVal;
             //StreamWriter LogFile = new StreamWriter("Status.log");
             if (ins.Count() != 0)
             {
@@ -227,16 +236,19 @@ namespace WebSite.Controllers
             return result;
         }
 
-        public string GetDevicelist(string config = "Device.cnf")
+        public config GetDeviceCnf(string config = "Device.cnf")
         {
-            string deviceLists = "";
+            string deviceCnf = "";
             StreamReader DeviceConfig = new StreamReader(config, Encoding.Default);
-            String line;
-            while ((line = DeviceConfig.ReadLine()) != null)
+            while (DeviceConfig.Peek() != -1)
             {
-                deviceLists = deviceLists + line + ",";
+                //读取文件中的一行字符
+                deviceCnf = DeviceConfig.ReadLine();
             }
-            return deviceLists.TrimEnd(',');
+            
+            configSet cs = JsonConvert.DeserializeObject<configSet>(deviceCnf);
+            config c = cs.configs[0];
+            return c;
         }
     }
 }

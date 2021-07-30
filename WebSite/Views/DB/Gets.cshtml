@@ -117,7 +117,7 @@
                 jsonArr = JSON.parse(data);
                 $("#tableBody").html("");
                 $.each(jsonArr, function (index, value) {
-                    if (jsonArr[index].DIAMETER > 4.8) {
+                    if (jsonArr[index].DIAMETER > @ViewData["warningVal"]) {
                         str1 = "<tr bgcolor=\"bs-danger\">";
                     } else {
                         str1 = "<tr>";
