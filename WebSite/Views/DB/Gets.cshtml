@@ -16,29 +16,28 @@
 
 <body>
     <div align="right">
-        <div class="select" align="left">
-            <label for="listNum">显示数据条数：</label>
-            <select id="listNum" class="form-select" onchange="listUpdate()">
-                <option selected value="50">50</option>
-                <option value="100">100</option>
-                <option value="200">200</option>
-                <option value="500">500</option>
-            </select>
-        </div>
-        <div class="select" align="right">
-            <label for="deviceSelect">按设备筛选：</label>
-            <select id="deviceSelect" class="form-select" onchange="listUpdate()">
-                <option selected value="_all">所有</option>
-            </select>
-        </div>
+        <label for="listNum">显示数据条数：</label>
+        <select id="listNum" class="form-select" onchange="listUpdate()">
+            <option selected value="50">50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+        </select>
+    </div>
+    <div align="right">
+        <label for="deviceSelect">按设备筛选：</label>
+        <select id="deviceSelect" class="form-select" onchange="listUpdate()">
+            <option selected value="_all">所有</option>
+        </select>
     </div>
     <div align="right">
         <fieldset class="form-group p-3">
             <div class="filter">
                 <label for="filterElementSelect">按数值筛选：</label>
-                <select id="filterElementSelect" class="form-select">
-                    <option selected value="_all">不筛选</option>
+                <select id="filterElementSelect" class="form-select" onchange="updateFilterElement()">
+                    <option selected value="_none">不筛选/重置</option>
                     <option value="DIAMETER">直径</option>
+                    <option value="DATE">日期</option>
                 </select>
                 <label for="filterTypeSelect">筛选关系：</label>
                 <select id="filterTypeSelect" class="form-select" onchange="updateFilterType()">
@@ -50,34 +49,38 @@
             </div>
             <div class="filter">
                 <form>
-                    <label for="filterLowerLimit">下限：</label><input id="filterLowerLimit" value="0"></input>
+                    <label for="filterLowerLimit">下限：</label><input id="filterLowerLimit" value="0" disabled="true"></input>
                     <label for="filterIncludeLowerLimit">包括下限</label><input id="filterIncludeLowerLimit" type="checkbox"></input>
                 </form>
                 <form>
-                    <label for="filterUpperLimit">上限：</label><input id="filterUpperLimit" value="0"></input>
+                    <label for="filterUpperLimit">上限：</label><input id="filterUpperLimit" value="0" disabled="true"></input>
                     <label for="filterIncludeUpperLimit">包括上限</label><input id="filterIncludeUpperLimit" type="checkbox"></input>
                 </form>
             </div>
             <div>
-                <button id="filterApplyButton" type="button" class="btn btn-outline-dark">应用数值筛选</button>
+                <label for="filterClear">清除筛选</label><input id="filterClear" type="checkbox"></input>
+                <button id="filterApplyButton" type="button" class="btn btn-outline-dark" onclick="updateFilter()">应用筛选</button>
             </div>
         </fieldset>
     </div>
 
-    <div>
+    <!--------------------------------------------------
+        <div>
 
-        <div style="text-align:center;margin-top:5px;">
-            <span>日期 起始</span>
-            <input type="text" id="dateBegin" />
+            <div style="text-align:center;margin-top:5px;">
+                <span>日期 起始</span>
+                <input type="text" id="dateBegin" />
+            </div>
+            <div style="text-align:center;margin-top:5px;">
+                <span>日期 终止</span>
+                <input type="text" id="dateEnd" />
+            </div>
+
         </div>
-        <div style="text-align:center;margin-top:5px;">
-            <span>日期 终止</span>
-            <input type="text" id="dateEnd" />
-        </div>
-    </div>
+    -------------------------------------------------->
 
     <legend>数据条目</legend>
-    <table class="table">
+    <table class="table table-hover">
         <thead>
         <th>ID</th>
         <th>TIME</th>
@@ -92,6 +95,15 @@
 <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
 <script type="text/javascript" src="~/js/site.js"></script>
 <script type="text/javascript">
+
+    //Main(?)
+    var filters = [];
+    var filterElement = "_none", filterType = "BETWEEN", includeUpperLimit = "true", includeLowerLimit = "true";
+    var upperLimitFloat = 0, lowerLimitFloat = 0;
+    $('#filterApplyButton').click(updateFilter);
+    updateTable();
+    updateDevice();
+
     //Function Definitions
     function updateTable() {
         num = $("#listNum").find("option:selected").val();
@@ -100,9 +112,7 @@
         $.ajax({
             type: "GET",
             contentType: "application/json; charset=utf-8",
-            url: "/DB/GetJSON?N=" + num + "&pos=" + selectedDevice +
-                "&filterElement=" + filterElement + "&filterType=" + filterType + "&upperLimit=" + upperLimitFloat + "&lowerLimit=" + lowerLimitFloat +
-                "&incUp=" + includeUpperLimit + "&incLow" + includeLowerLimit,
+            url: "/DB/GetJSON?N=" + num + "&pos=" + selectedDevice + "&filterElement=" + filterElement + "&filterType=" + filterType + "&upperLimit=" + upperLimitFloat + "&lowerLimit=" + lowerLimitFloat + "&incUp=" + includeUpperLimit + "&incLow" + includeLowerLimit,
             error: function (data) {
                 alert("Error in getTableResult: " + data);
             },
@@ -110,7 +120,7 @@
                 jsonArr = JSON.parse(data);
                 $("#tableBody").html("");
                 $.each(jsonArr, function (index, value) {
-                    if (jsonArr[index].DIAMETER > 4.9) {
+                    if (jsonArr[index].DIAMETER > 4.8) {
                         str1 = "<tr bgcolor=\"bs-danger\">";
                     } else {
                         str1 = "<tr>";
@@ -149,8 +159,8 @@
                         $("#deviceSelect").append("<option value=\"" + jsonArr[i].POS + "\">" + jsonArr[i].POS + "</option>");
                     }
                 }
-                if (selectedDevice != "_none") {
-                    $("#deviceSelect").append("<option value=\"_all\">所有</option>");
+                if (selectedDevice != "_all") {
+                    $("#deviceSelect").append("<option value=\"_none\">所有</option>");
                 }
             }
         });
@@ -160,11 +170,28 @@
         updateTable();
     }
     function updateFilter() {
+        var tmpFilterElement = $("#filterElementSelect").find("option:selected").val();
         var upperLimit = $("#filterUpperLimit").val();
         var lowerLimit = $("#filterLowerLimit").val();
-        var tmpUpperLimitFloat = parseFloat(upperLimit);
-        var tmpLowerLimitFloat = parseFloat(lowerLimit);
         var tmpFilterType = $("#filterTypeSelect").find("option:selected").val();
+        var tmpUpperLimitFloat = 0;
+        var tmpLowerLimitFloat = 0;
+        if (tmpFilterElement == "_none") {
+            //重置所有过滤器
+            filters = [];
+            updateTable();
+            return;
+        } else if (includeUpperLimit = $("#filterClear").get(0).checked == "true") {
+            //清除单个过滤器
+            filters = filters.filter(t => t.element != tmpFilterElement);
+        }
+        if (tmpFilterElement == "DIAMETER") {
+            tmpUpperLimitFloat = parseFloat(upperLimit);
+            tmpLowerLimitFloat = parseFloat(lowerLimit);
+        } else if (tmpFilterElement == "DATE") {
+            tmpUpperLimitFloat = (new Date(upperLimit)).valueOf();
+            tmpLowerLimitFloat = (new Date(lowerLimit)).valueOf();
+        }
         if (isNaN(tmpUpperLimitFloat) || isNaN(tmpLowerLimitFloat)) {
             alert("Invalid input!");
             return;
@@ -175,11 +202,9 @@
         }
         includeUpperLimit = $("#filterIncludeUpperLimit").get(0).checked;
         includeLowerLimit = $("#filterIncludeLowerLimit").get(0).checked;
-        filterElement = $("#filterElementSelect").find("option:selected").val();
-        filterType = $("#filterTypeSelect").find("option:selected").val();
-        upperLimitFloat = tmpUpperLimitFloat;
-        lowerLimitFloat = tmpLowerLimitFloat;
-        //console.log(filterElement+", "+filterType+", "+upperLimitFloat+", "+lowerLimitFloat+", "+includeUpperLimit+", "+includeLowerLimit+", \n");
+        filters = filters.filter(t => t.element != tmpFilterElement);
+        filters.push(new filter(tmpFilterElement, tmpFilterType, tmpUpperLimitFloat, tmpLowerLimitFloat, includeUpperLimit, includeLowerLimit));
+        console.log(JSON.stringify({ filters }));
         updateTable();
     }
     function updateFilterType() {
@@ -195,15 +220,35 @@
             $("#filterLowerLimit").attr("disabled", true);
         }
     }
+    function updateFilterElement() {
+        var tmpElement = $("#filterElementSelect").find("option:selected").val()
+        if (tmpElement == "DATE") {
+            $("#filterLowerLimit").get(0).setAttribute("type", "datetime-local");
+            $("#filterUpperLimit").get(0).setAttribute("type", "datetime-local");
+        } else if (tmpElement == "DIAMETER" || tmpElement == "_none") {
+            $("#filterLowerLimit").get(0).setAttribute("type", "text");
+            $("#filterUpperLimit").get(0).setAttribute("type", "text");
+        }
+        if (tmpElement == "_none") {
+            $("#filterUpperLimit").attr("disabled", true);
+            $("#filterLowerLimit").attr("disabled", true);
+        } else {
+            $("#filterUpperLimit").attr("disabled", false);
+            $("#filterLowerLimit").attr("disabled", false);
+        }
+    }
+    function filter(element, type, upperLimit, lowerLimit, incUpper, incLower) {
+        this.element = element;
+        this.type = type;
+        this.upperLimit = upperLimit;
+        this.lowerLimit = lowerLimit;
+        this.incUpper = incUpper;
+        this.incLower = incLower;
+    }
 
-    //Main(?)
-    var filterElement = "_none", filterType = "BETWEEN", includeUpperLimit = "true", includeLowerLimit = "true";
-    var upperLimitFloat = 0, lowerLimitFloat = 0;
-    $('#filterApplyButton').click(updateFilter);
-    updateTable();
-    updateDevice();
 </script>
 
+<!--------------------------------------------------
 <script type="text/javascript">
 
     var today = new Date();
@@ -222,3 +267,4 @@
     });
 
 </script>
+-------------------------------------------------->
