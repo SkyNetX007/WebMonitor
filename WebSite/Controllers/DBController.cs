@@ -7,9 +7,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WebSite.DatabaseAccess;
+using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace WebSite.Controllers
 {
+    public class filter
+    {
+        public string element;
+        public string type;
+        public double upperLimit;
+        public string incUpper;
+        public double lowerLimit;
+        public string incLower;
+    }
+
+    public class filterSet
+    {
+        public filter[] filters;
+    }
+
     public class DBController : Controller
     {
         private IDBAccess DBAccess;
@@ -51,62 +68,68 @@ namespace WebSite.Controllers
             ViewData["deviceList"] = GetDevicelist("Device.cnf");
             return View();
         }
-        
 
-        //取N条JSON记录
-        public ActionResult<string> GetJSON(int N=100, string pos = "_all", string filterElement = "_none", string filterType = "BETWEEN", string incUp = "true", string incLow = "true", double upperLimit = 0, double lowerLimit = 0)
+
+        //获取JSON记录
+        public ActionResult<string> GetJSON(string pos = "_all", string filters = "{\"filters\":[]}", int N = 100)
         {
             var ins = DBAccess.GetRecord().ToList();
-
             if (pos != "_all")
             {
                 ins.RemoveAll(n => n.POS != pos);
             }
-            if (filterElement != "_none")
+            filterSet fs = JsonConvert.DeserializeObject<filterSet>(filters);
+            foreach (filter f in fs.filters)
             {
-                //改变比较数值类型
-                Func<Record, double> func = x => 0;
-                if (filterElement == "DIAMETER")
+                if (f.element != "_none")
                 {
-                    func = x => x.DIAMETER;
-                }
+                    //改变比较数值类型
+                    Func<Record, double> func = x => 0;
+                    if (f.element == "DIAMETER")
+                    {
+                        func = x => x.DIAMETER;
+                    }
+                    else if (f.element == "DATE")
+                    {
+                        func = x => ((x.TIME - new DateTime(1970, 1, 1, 0, 0, 0, 0).ToLocalTime()).TotalSeconds * 1000);
+                    }
 
-                if (filterType == "BETWEEN")
-                {
-                    if (incUp == "false")
-                        ins.RemoveAll(n => func(n) == upperLimit);
-                    if (incLow == "false")
-                        ins.RemoveAll(n => func(n) == lowerLimit);
-                    ins.RemoveAll(n => (func(n) < lowerLimit || func(n) > upperLimit));
-                }
-                else if (filterType == "EXCEPT")
-                {
-                    if (incUp == "false")
-                        ins.RemoveAll(n => func(n) == upperLimit);
-                    if (incLow == "false")
-                        ins.RemoveAll(n => func(n) == lowerLimit);
-                    ins.RemoveAll(n => (func(n) > lowerLimit && func(n) < upperLimit));
-                }
-                else if (filterType == "GREATER")
-                {
-                    if (incLow == "false")
-                        ins.RemoveAll(n => func(n) == lowerLimit);
-                    ins.RemoveAll(n => func(n) < lowerLimit);
-                }
-                else if (filterType == "LESS")
-                {
-                    if (incUp == "false")
-                        ins.RemoveAll(n => func(n) == upperLimit);
-                    ins.RemoveAll(n => func(n) > upperLimit);
+                    if (f.type == "BETWEEN")
+                    {
+                        if (f.incUpper == "false")
+                            ins.RemoveAll(n => func(n) == f.upperLimit);
+                        if (f.incLower == "false")
+                            ins.RemoveAll(n => func(n) == f.lowerLimit);
+                        ins.RemoveAll(n => (func(n) < f.lowerLimit || func(n) > f.upperLimit));
+                    }
+                    else if (f.type == "EXCEPT")
+                    {
+                        if (f.incUpper == "false")
+                            ins.RemoveAll(n => func(n) == f.upperLimit);
+                        if (f.incLower == "false")
+                            ins.RemoveAll(n => func(n) == f.lowerLimit);
+                        ins.RemoveAll(n => (func(n) > f.lowerLimit && func(n) < f.upperLimit));
+                    }
+                    else if (f.type == "GREATER")
+                    {
+                        if (f.incLower == "false")
+                            ins.RemoveAll(n => func(n) == f.lowerLimit);
+                        ins.RemoveAll(n => func(n) < f.lowerLimit);
+                    }
+                    else if (f.type == "LESS")
+                    {
+                        if (f.incUpper == "false")
+                            ins.RemoveAll(n => func(n) == f.upperLimit);
+                        ins.RemoveAll(n => func(n) > f.upperLimit);
+                    }
                 }
             }
             if (ins.Count < N || N == -1)
-                N = ins.Count();
-
+                N = ins.Count;
             var results = new Record[N];
-            if (ins.Count() != 0)
+            if (ins.Count != 0)
             {
-                int len = ins.Count() - 1;
+                int len = ins.Count - 1;
                 for (int num = 0; num < N; num++)
                 {
                     results[num] = ins[len];
@@ -125,6 +148,7 @@ namespace WebSite.Controllers
             return result;
         }
 
+        //设备状态
         public ActionResult<string> GetStatus()
         {
             List<string> Device = new List<string>();
