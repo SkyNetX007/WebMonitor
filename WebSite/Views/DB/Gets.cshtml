@@ -79,17 +79,32 @@
         </div>
     -------------------------------------------------->
 
-    <legend>数据条目</legend>
-    <table class="table table-hover">
-        <thead>
-        <th>ID</th>
-        <th>TIME</th>
-        <th>DIAMETER</th>
-        <th>POS</th>
-        <th>PASSED</th>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+    <div>
+        <legend for="statTable">总览</legend>
+        <table id="statTable" class="table">
+            <thead>
+            <th>钢球总数</th>
+            <th>半径均值</th>
+            <th>通过总数</th>
+            <th>不通过总数</th>
+            </thead>
+            <tbody id="statTableBody"></tbody>
+        </table>
+    </div>
+    <br></br>
+    <div>
+        <legend for="dataTable">数据条目</legend>
+        <table id="dataTable" class="table table-hover">
+            <thead>
+            <th>ID</th>
+            <th>TIME</th>
+            <th>DIAMETER</th>
+            <th>POS</th>
+            <th>PASSED</th>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 </body>
 
 <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
@@ -115,6 +130,7 @@
             },
             success: function (data) {
                 jsonArr = JSON.parse(data);
+                var passedCount = 0, notPassedCount = 0, avgDiameter = 0;
                 $("#tableBody").html("");
                 $.each(jsonArr, function (index, value) {
                     if (jsonArr[index].DIAMETER > @ViewData["warningVal"]) {
@@ -122,6 +138,9 @@
                     } else {
                         str1 = "<tr>";
                     }
+                    passedCount += (jsonArr[index].PASSED=="True"?1:0);
+                    notPassedCount += (jsonArr[index].PASSED=="True"?0:1);
+                    avgDiameter += parseFloat(jsonArr[index].DIAMETER);
                     str1 += "<td>" + jsonArr[index].ID + "</td>" +
                         "<td>" + jsonArr[index].TIME + "</td>" +
                         "<td>" + jsonArr[index].DIAMETER + "</td>" +
@@ -130,6 +149,13 @@
                         "</tr>";
                     $("#tableBody").append(str1);
                 });
+                avgDiameter /= (passedCount + notPassedCount);
+                str1 = "<tr><td>" + (passedCount+notPassedCount) + "</td>" +
+                    "<td>" + avgDiameter + "</td>" +
+                    "<td>" + passedCount + "</td>" +
+                    "<td>" + notPassedCount + "</td>" +
+                    "</tr>";
+                $("#statTableBody").html(str1);
             }
         });
         setTimeout(updateTable, 3000);
