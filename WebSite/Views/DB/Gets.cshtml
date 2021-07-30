@@ -75,9 +75,7 @@
         $.ajax({
             type: "GET",
             contentType: "application/json; charset=utf-8",
-            data: JSON.stringify({filters}),
-            dataType: "json",
-            url: "/DB/GetTableResult?N=" + num + "&line=" + selectedDevice,
+            url: "/DB/GetTableResult?N=" + num + "&line=" + selectedDevice + "&filters=" + JSON.stringify({filters}),
             error: function (data) {
                 alert("Error in getTableResult: " + data);
             },
@@ -146,9 +144,12 @@
             filters = [];
             updateTable();
             return;
-        }else if(includeUpperLimit = $("#filterClear").get(0).checked == "true"){
+        }
+        if($("#filterClear").get(0).checked == true){
             //清除单个过滤器
             filters = filters.filter(t => t.element != tmpFilterElement);
+            updateTable();
+            return;
         }
         if(tmpFilterElement == "DIAMETER"){
             tmpUpperLimitFloat = parseFloat(upperLimit);
@@ -168,7 +169,7 @@
         includeUpperLimit = $("#filterIncludeUpperLimit").get(0).checked;
         includeLowerLimit = $("#filterIncludeLowerLimit").get(0).checked;
         filters = filters.filter(t => t.element != tmpFilterElement);
-        filters.push(new filter(tmpFilterElement, tmpFilterType, tmpUpperLimitFloat, tmpLowerLimitFloat, includeUpperLimit, includeLowerLimit));
+        filters.push(new elemFilter(tmpFilterElement, tmpFilterType, tmpUpperLimitFloat, tmpLowerLimitFloat, includeUpperLimit, includeLowerLimit));
         console.log(JSON.stringify({filters}));
         updateTable();
     }
@@ -202,7 +203,7 @@
             $("#filterLowerLimit").attr("disabled", false);
         }
     }
-    function filter(element, type, upperLimit, lowerLimit, incUpper, incLower){
+    function elemFilter(element, type, upperLimit, lowerLimit, incUpper, incLower){
         this.element = element;
         this.type = type;
         this.upperLimit = upperLimit;
