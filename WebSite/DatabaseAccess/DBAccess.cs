@@ -30,7 +30,7 @@ namespace WebSite.DatabaseAccess
         //取某设备记录
         public IEnumerable<Record> GetRecordByPos(string pos)
         {
-            return Context.Record.Where(s=>s.POS == pos).ToList();
+            return Context.Record.Where(s=>s.DEVICE_ID == pos).ToList();
         }
 
         //取某id记录
@@ -54,7 +54,7 @@ namespace WebSite.DatabaseAccess
 
             if (ins != null)
             {
-                ins.POS = val;
+                ins.DEVICE_ID = val;
                 state = Context.SaveChanges() > 0;
             }
 

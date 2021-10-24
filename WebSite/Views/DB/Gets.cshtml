@@ -79,7 +79,7 @@
         </div>
     -------------------------------------------------->
 
-    <div>
+@*    <div>
         <legend for="statTable">总览</legend>
         <table id="statTable" class="table">
             <thead>
@@ -90,17 +90,20 @@
             </thead>
             <tbody id="statTableBody"></tbody>
         </table>
-    </div>
+    </div>*@
     <br></br>
     <div>
         <legend for="dataTable">数据条目</legend>
         <table id="dataTable" class="table table-hover">
             <thead>
             <th>ID</th>
-            <th>TIME</th>
-            <th>DIAMETER</th>
-            <th>POS</th>
-            <th>PASSED</th>
+            <th>生产日期</th>
+            <th>钢球序号</th>
+            <th>钢球直径</th>
+            <th>设备序号</th>
+            <th>设备直径</th>
+            <th>生产速度(个/分钟)</th>
+            <th>合格率%</th>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -143,19 +146,22 @@
                     avgDiameter += parseFloat(jsonArr[index].DIAMETER);
                     str1 += "<td>" + jsonArr[index].ID + "</td>" +
                         "<td>" + jsonArr[index].TIME + "</td>" +
-                        "<td>" + jsonArr[index].DIAMETER + "</td>" +
-                        "<td>" + jsonArr[index].POS + "</td>" +
-                        "<td>" + jsonArr[index].PASSED + "</td>" +
+                        "<td>" + jsonArr[index].BALL_ID + "</td>" +
+                        "<td>" + (1*jsonArr[index].BALL_DIAMETER).toFixed(2) + "</td>" +
+                        "<td>" + jsonArr[index].DEVICE_ID + "</td>" +
+                        "<td>" + jsonArr[index].DEVICE_DIAMETER + "</td>" +
+                        "<td>" + (1*jsonArr[index].SPEED).toFixed(2) + "</td>" +
+                        "<td>" + (100*jsonArr[index].PASS_RATE).toFixed(2) + "</td>" +
                         "</tr>";
                     $("#tableBody").append(str1);
                 });
-                avgDiameter /= (passedCount + notPassedCount);
-                str1 = "<tr><td>" + (passedCount+notPassedCount) + "</td>" +
-                    "<td>" + avgDiameter + "</td>" +
-                    "<td>" + passedCount + "</td>" +
-                    "<td>" + notPassedCount + "</td>" +
-                    "</tr>";
-                $("#statTableBody").html(str1);
+                //avgDiameter /= (passedCount + notPassedCount);
+                //str1 = "<tr><td>" + (passedCount+notPassedCount) + "</td>" +
+                //    "<td>" + avgDiameter + "</td>" +
+                //    "<td>" + passedCount + "</td>" +
+                //    "<td>" + notPassedCount + "</td>" +
+                //    "</tr>";
+                //$("#statTableBody").html(str1);
             }
         });
         setTimeout(updateTable, 3000);
