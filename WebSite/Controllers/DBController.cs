@@ -47,11 +47,11 @@ namespace WebSite.Controllers
         {
             DBAccess = dbaccess;
         }
-        
+
         //插入数据
-        public ActionResult<string> Create(int ID, DateTime TIME, double DIAMETER, string POS, bool PASSED)
+        public ActionResult<string> Create(int id, DateTime time, double ballDiameter, double deviceDiameter, string deviceID, int ballId, double speed, double passRate)
         {
-            var _record = new Record(ID, TIME, DIAMETER, POS, PASSED);
+            var _record = new Record(id, time, ballDiameter, deviceDiameter, deviceID, ballId, speed, passRate);
 
             var result = DBAccess.CreateRecord(_record);
 
@@ -89,7 +89,7 @@ namespace WebSite.Controllers
             var ins = DBAccess.GetRecord().ToList();
             if (pos != "_all")
             {
-                ins.RemoveAll(n => n.POS != pos);
+                ins.RemoveAll(n => n.DEVICE_ID != pos);
             }
             filterSet fs = JsonConvert.DeserializeObject<filterSet>(filters);
             foreach (filter f in fs.filters)
@@ -100,7 +100,7 @@ namespace WebSite.Controllers
                     Func<Record, double> func = x => 0;
                     if (f.element == "DIAMETER")
                     {
-                        func = x => x.DIAMETER;
+                        func = x => x.BALL_DIAMETER;
                     }
                     else if (f.element == "DATE")
                     {
@@ -153,7 +153,17 @@ namespace WebSite.Controllers
             string result = "";
             for (int num = 0; num < N; num++)
             {
-                result += $"{{\"ID\":\"{results[num].ID}\",\"TIME\":\"{results[num].TIME}\",\"DIAMETER\":\"{results[num].DIAMETER}\",\"POS\":\"{results[num].POS}\",\"PASSED\":\"{results[num].PASSED}\"}},";
+                //result += $"{{\"ID\":\"{results[num].ID}\",\"TIME\":\"{results[num].TIME}\",\"DIAMETER\":\"{results[num].BALL_DIAMETER}\",\"POS\":\"{results[num].POS}\",\"PASSED\":\"{results[num].PASSED}\"}},";
+                result += $"{{";
+                result += $"\"ID\":\"{results[num].ID}\"";
+                result += $",\"TIME\":\"{results[num].TIME}\"";
+                result += $",\"BALL_DIAMETER\":\"{results[num].BALL_DIAMETER}\"";
+                result += $",\"DEVICE_DIAMETER\":\"{results[num].DEVICE_DIAMETER}\"";
+                result += $",\"BALL_ID\":\"{results[num].BALL_ID}\"";
+                result += $",\"DEVICE_ID\":\"{results[num].DEVICE_ID}\"";
+                result += $",\"SPEED\":\"{results[num].SPEED}\"";
+                result += $",\"PASS_RATE\":\"{results[num].PASS_RATE}\"";
+                result += $"}},";
             }
             result = result.TrimEnd(',');
             result = "[" + result + "]";
@@ -187,6 +197,11 @@ namespace WebSite.Controllers
                 { 
                     status = 1;
                 }
+
+                List<Status> statusIns = DBAccess.GetStatusByPos(pos).ToList();
+                if (statusIns.Count == 0) continue;
+                if (statusIns[0].ONLINE) { status = 1; } else { status = 0; }
+                if (statusIns[0].ERROR) { status = 2; }
                 TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status},\"TotalRecords\":{ins.Count}}},";
             }
             result = "[" + TimeRecords.TrimEnd(',') + "]";
@@ -195,31 +210,32 @@ namespace WebSite.Controllers
 
         public ActionResult<string> DataCheck(double upperLimit = 4.8)
         {
-            var ins = DBAccess.GetRecord();
-            var result = "";
-            upperLimit = GetDeviceCnf("Device.cnf").warningVal;
-            //StreamWriter LogFile = new StreamWriter("Status.log");
-            if (ins.Count() != 0)
-            {
-                foreach (var s in ins)
-                {
-                    if (s.DIAMETER > upperLimit)
-                    {
-                        TimeSpan DiffSeconds = new TimeSpan(DateTime.Now.Ticks - s.TIME.Ticks);
-                        if (DiffSeconds.TotalSeconds < 60)
-                        {
-                            result += $"{{\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},";
-                        }
-                        //LogFile.WriteLine($"{{{s.TIME}:\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},");
-                    }
-                }
-                result = "[" + result.TrimEnd(',') + "]";
-            }
-            else
-            {
-                result = "[]";
-            }
-            return result;
+            //var ins = DBAccess.GetRecord();
+            //var result = "";
+            //upperLimit = GetDeviceCnf("Device.cnf").warningVal;
+            ////StreamWriter LogFile = new StreamWriter("Status.log");
+            //if (ins.Count() != 0)
+            //{
+            //    foreach (var s in ins)
+            //    {
+            //        if (s.DIAMETER > upperLimit)
+            //        {
+            //            TimeSpan DiffSeconds = new TimeSpan(DateTime.Now.Ticks - s.TIME.Ticks);
+            //            if (DiffSeconds.TotalSeconds < 60)
+            //            {
+            //                result += $"{{\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},";
+            //            }
+            //            //LogFile.WriteLine($"{{{s.TIME}:\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},");
+            //        }
+            //    }
+            //    result = "[" + result.TrimEnd(',') + "]";
+            //}
+            //else
+            //{
+            //    result = "[]";
+            //}
+            //return result;
+            return "";
         }
 
         //取某id记录
