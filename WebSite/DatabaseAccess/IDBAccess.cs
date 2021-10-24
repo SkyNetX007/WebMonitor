@@ -13,8 +13,12 @@ namespace WebSite.DatabaseAccess
         //取全部记录
         IEnumerable<Record> GetRecord();
 
+        IEnumerable<Status> GetStatusRecord();
+
         //取某设备记录
         IEnumerable<Record> GetRecordByPos(string pos);
+
+        IEnumerable<Status> GetStatusByPos(string pos);
 
         //取某id记录
         Record GetRecordByID(int id);

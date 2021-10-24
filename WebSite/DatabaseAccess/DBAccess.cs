@@ -27,10 +27,20 @@ namespace WebSite.DatabaseAccess
             return Context.Record.ToList();
         }
 
+        public IEnumerable<Status> GetStatusRecord()
+        {
+            return Context.Status.ToList();
+        }
+
         //取某设备记录
         public IEnumerable<Record> GetRecordByPos(string pos)
         {
-            return Context.Record.Where(s=>s.DEVICE_ID == pos).ToList();
+            return Context.Record.Where(s => s.DEVICE_ID == pos).ToList();
+        }
+
+        public IEnumerable<Status> GetStatusByPos(string pos)
+        {
+            return Context.Status.Where(s => s.DEVICE_ID == pos).ToList();
         }
 
         //取某id记录

@@ -197,6 +197,11 @@ namespace WebSite.Controllers
                 { 
                     status = 1;
                 }
+
+                List<Status> statusIns = DBAccess.GetStatusByPos(pos).ToList();
+                if (statusIns.Count == 0) continue;
+                if (statusIns[0].ONLINE) { status = 1; } else { status = 0; }
+                if (statusIns[0].ERROR) { status = 2; }
                 TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status},\"TotalRecords\":{ins.Count}}},";
             }
             result = "[" + TimeRecords.TrimEnd(',') + "]";
