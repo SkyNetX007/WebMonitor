@@ -13,5 +13,6 @@ namespace WebSite.DatabaseAccess
         { }
 
         public DbSet<Record> Record { get; set; }
+        public DbSet<Status> Status { get; set; }
     }
 }

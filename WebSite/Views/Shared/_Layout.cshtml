@@ -80,6 +80,25 @@
                     statsArr = JSON.parse(data);
                     if (statsArr.length != 0) {
                         for (var i = 0; i < statsArr.length; i++) {
+                            if (statsArr[i].Status == 2) {
+                                notifyMe("设备异常", "目前有设备异常！");
+                            }
+                        }
+                    }
+                }
+            })
+            /*
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "/DB/GetStatus",
+                error: function (data) {
+                    alert("出错了！！:" + data);
+                },
+                success: function (data) {
+                    statsArr = JSON.parse(data);
+                    if (statsArr.length != 0) {
+                        for (var i = 0; i < statsArr.length; i++) {
                             if (statsArr[i].Status == 0) {
                                 notifyMe("设备离线", "目前有设备离线！");
                             }
@@ -87,7 +106,7 @@
                     }
                 }
             })
-
+            
             $.ajax({
                 type: "GET",
                 contentType: "application/json; charset=utf-8",
@@ -106,7 +125,7 @@
                     }
                 }
             })
-
+            */
         }, 5000);
 
     </script>
