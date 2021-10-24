@@ -26,7 +26,7 @@
     <div id="main" style="width: 1200px;height:600px;"></div>
 
     <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.staticfile.org/echarts/5.1.2/echarts.min.js"></script>
+    <script type="text/javascript" src="https://cdn.staticfile.org/echarts/5.2.0/echarts.js"></script>
     <script type="text/javascript">
 
         var QueryUrl = "/DB/GetJSON";
@@ -54,43 +54,36 @@
         var seriesData = [];
 
         // 基于准备好的dom，初始化echarts实例
+        //var option = {
+        //    title: {
+        //        text: TableTitle
+        //    },
+        //    tooltip: {},
+        //    xAxis: {
+        //        type: "category",
+        //    },
+        //    yAxis: {
+        //        type: "value",
+        //        min: -1,
+        //        max: 6
+        //    }
+        //};
+        //myChart.setOption(option);
+        
         var myChart = echarts.init(document.getElementById('main'));
-        var option = {
-            title: {
-                text: TableTitle
-            },
-            tooltip: {},
-            legend: {
-                data: ['Diameter']
-            },
-            xAxis: {
-                type: "category",
-                data: nameData
-            },
-            yAxis: {
-                type: "value",
-                min: -1,
-                max: 6
-            },
-            series: [{
-                name: 'Diameter',
-                type: 'line',
-                data: seriesData
-            }]
-        };
-
-        myChart.setOption(option);
-
+        var option = {};
         updateData();
 
         function updateData() {
+            myChart.setOption(option);
 
             num = $("#listNum").find("option:selected").val();
             selectedDevice = $("#deviceSelect").find("option:selected").val();
+            var chartSeries = [];
+            var indexSeries = [];
             if (selectedDevice == "全部") {
-                QueryUrl = "/DB/GetJSON?POS=_all&N=" + num;
-            } else { QueryUrl = "/DB/GetJSON?POS=" + selectedDevice + "&N=" + num; }
-
+                QueryUrl = "/DB/getChartInfo?POS=_all&N=" + num;
+            } else { QueryUrl = "/DB/getChartInfo?POS=" + selectedDevice + "&N=" + num; }
             $.ajax({
                 type: "GET",
                 contentType: "application/json; charset=utf-8",
@@ -100,23 +93,22 @@
                 },
                 success: function (data) {
                     jsonArr = JSON.parse(data);
-                    nameData.length = 0;
-                    seriesData.length = 0;
-                    $.each(jsonArr, function (index, value) {
-                        nameData[index] = jsonArr[index].ID;
-                        seriesData[index] = jsonArr[index].SPEED;
+                    $.each(jsonArr, function(index, value){
+                        chartSeries.push({type: 'line', data: jsonArr[index].records, name: jsonArr[index].deviceID});
+                        for(i = 1; i <= jsonArr[index].records.length; i++){
+                            if(i > Math.max(...indexSeries)){
+                                indexSeries.push(i);
+                            }
+                        }
                     });
                 }
             });
-
-            myChart.setOption({
-                xAxis: {
-                    data: nameData
-                },
-                series: [{
-                    data: seriesData
-                }]
-            });
+            option = {
+                xAxis: {type: 'category', data: indexSeries},
+                yAxis: {type: 'value', scale: 'true'},
+                series: chartSeries
+            };
+            console.log(option);
 
             setTimeout(updateData, 1000);
         }
