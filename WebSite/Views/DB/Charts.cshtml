@@ -6,14 +6,13 @@
     <div align="right">
         显示数据条数：
         <select id="listNum" class="form-select">
-            <option value="50">50</option>
-            <option selected value="100">100</option>
-            <option value="200">200</option>
-            <option value="-1">所有</option>
+            <option value="20">20</option>
+            <option selected value="50">50</option>
+            <option value="100">100</option>
         </select>
     </div>
 
-    <div align="right">
+@*    <div align="right">
         设备记录筛选：
         <select id="deviceSelect" class="form-select" onchange="updateDataSrc()">
             <option value="line1">line1</option>
@@ -21,12 +20,20 @@
             <option value="line3">line3</option>
             <option selected value="_all">所有</option>
         </select>
+    </div>*@
+
+    <div align="right">
+        图表数据内容：
+        <select id="dataTypeSelect" class="form-select">
+            <option selected value="passrate">合格率%</option>
+            <option value="speed">速度(个/分钟)</option>
+        </select>
     </div>
 
     <div id="main" style="width: 1200px;height:600px;"></div>
 
     <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.staticfile.org/echarts/5.1.2/echarts.min.js"></script>
+    <script type="text/javascript" src="https://cdn.staticfile.org/echarts/5.2.0/echarts.js"></script>
     <script type="text/javascript">
 
         var QueryUrl = "/DB/GetJSON";
@@ -48,49 +55,20 @@
         });
 
         var TableTitle = "@ViewData["pos"]";
-
-        var jsonArr = [];
-        var nameData = [];
-        var seriesData = [];
-
-        // 基于准备好的dom，初始化echarts实例
+        
         var myChart = echarts.init(document.getElementById('main'));
-        var option = {
-            title: {
-                text: TableTitle
-            },
-            tooltip: {},
-            legend: {
-                data: ['Diameter']
-            },
-            xAxis: {
-                type: "category",
-                data: nameData
-            },
-            yAxis: {
-                type: "value",
-                min: -1,
-                max: 6
-            },
-            series: [{
-                name: 'Diameter',
-                type: 'line',
-                data: seriesData
-            }]
-        };
-
-        myChart.setOption(option);
-
+        var option = {};
         updateData();
 
         function updateData() {
+            myChart.setOption(option);
 
             num = $("#listNum").find("option:selected").val();
-            selectedDevice = $("#deviceSelect").find("option:selected").val();
-            if (selectedDevice == "全部") {
-                QueryUrl = "/DB/GetJSON?POS=_all&N=" + num;
-            } else { QueryUrl = "/DB/GetJSON?POS=" + selectedDevice + "&N=" + num; }
-
+            selectedDataType = $("#dataTypeSelect").find("option:selected").val();
+            var chartSeries = [];
+            var indexSeries = [];
+            var nameSeries = [];
+            QueryUrl = "/DB/getChartInfo?dataType=" + selectedDataType + "&N=" + num;
             $.ajax({
                 type: "GET",
                 contentType: "application/json; charset=utf-8",
@@ -100,23 +78,28 @@
                 },
                 success: function (data) {
                     jsonArr = JSON.parse(data);
-                    nameData.length = 0;
-                    seriesData.length = 0;
-                    $.each(jsonArr, function (index, value) {
-                        nameData[index] = jsonArr[index].ID;
-                        seriesData[index] = jsonArr[index].SPEED;
+                    $.each(jsonArr, function(index, value){
+                        chartSeries.push({type: 'line', data: jsonArr[index].records, name: jsonArr[index].deviceID});
+                        nameSeries.push(jsonArr[index].deviceID);
+                        for(i = 1; i <= jsonArr[index].records.length; i++){
+                            if(i > Math.max(...indexSeries)){
+                                indexSeries.push(i);
+                            }
+                        }
                     });
                 }
             });
-
-            myChart.setOption({
-                xAxis: {
-                    data: nameData
-                },
-                series: [{
-                    data: seriesData
-                }]
-            });
+            option = {
+                legend: {data: nameSeries, top: '4%'},
+                xAxis: {type: 'category', data: indexSeries},
+                yAxis: {type: 'value', scale: 'true'},
+                series: chartSeries
+            };
+            if(selectedDataType == 'passrate'){
+                option.yAxis = {type:'value', scale: true, max: 1, min: 0}
+            }else{
+                option.yAxis = {type:'value', scale: true, max:100, min:0}
+            }
 
             setTimeout(updateData, 1000);
         }

@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WebSite.DatabaseAccess;
-using System.Text.Json;
 using Newtonsoft.Json;
 
 namespace WebSite.Controllers
@@ -27,6 +26,25 @@ namespace WebSite.Controllers
         public filter[] filters;
     }
 
+    public class chartInfo
+    {
+        public string deviceID;
+        public int num;
+        public List<double> records;
+
+        public chartInfo() { }
+        public chartInfo(double firstRecord, string deviceID)
+        {
+            num = 1; this.deviceID = deviceID;
+            records = new List<double>();
+            records.Add(firstRecord);
+        }
+        public bool isSameLine(Record r)
+        {
+            return (r.DEVICE_ID == deviceID);
+        }
+    }
+
     public class config
     {
         public string name = "default";
@@ -42,7 +60,7 @@ namespace WebSite.Controllers
     public class DBController : Controller
     {
         private IDBAccess DBAccess;
-        
+
         public DBController(IDBAccess dbaccess)
         {
             DBAccess = dbaccess;
@@ -175,7 +193,7 @@ namespace WebSite.Controllers
         public ActionResult<string> GetStatus()
         {
             string deviceList = GetDeviceCnf("Device.cnf").deviceList;
-            List<string> Device = deviceList.Split(",",StringSplitOptions.RemoveEmptyEntries).ToList();
+            List<string> Device = deviceList.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
 
             List<Record> ins;
             string TimeRecords = "";
@@ -186,7 +204,7 @@ namespace WebSite.Controllers
                 ins = DBAccess.GetRecordByPos(pos).ToList();
                 int status;
                 if (ins.Count == 0) continue;
-                DateTime recordTime = ins[ins.Count-1].TIME;
+                DateTime recordTime = ins[ins.Count - 1].TIME;
                 DateTime currentTime = DateTime.Now;
                 TimeSpan DiffSeconds = new TimeSpan(currentTime.Ticks - recordTime.Ticks);
                 if (DiffSeconds.TotalSeconds > 30)
@@ -194,7 +212,7 @@ namespace WebSite.Controllers
                     status = 0;
                 }
                 else
-                { 
+                {
                     status = 1;
                 }
 
@@ -210,31 +228,6 @@ namespace WebSite.Controllers
 
         public ActionResult<string> DataCheck(double upperLimit = 4.8)
         {
-            //var ins = DBAccess.GetRecord();
-            //var result = "";
-            //upperLimit = GetDeviceCnf("Device.cnf").warningVal;
-            ////StreamWriter LogFile = new StreamWriter("Status.log");
-            //if (ins.Count() != 0)
-            //{
-            //    foreach (var s in ins)
-            //    {
-            //        if (s.DIAMETER > upperLimit)
-            //        {
-            //            TimeSpan DiffSeconds = new TimeSpan(DateTime.Now.Ticks - s.TIME.Ticks);
-            //            if (DiffSeconds.TotalSeconds < 60)
-            //            {
-            //                result += $"{{\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},";
-            //            }
-            //            //LogFile.WriteLine($"{{{s.TIME}:\"POS\":\"{s.POS}\",\"ID\":{s.ID},\"DIAMETER\":{s.DIAMETER}}},");
-            //        }
-            //    }
-            //    result = "[" + result.TrimEnd(',') + "]";
-            //}
-            //else
-            //{
-            //    result = "[]";
-            //}
-            //return result;
             return "";
         }
 
@@ -261,10 +254,59 @@ namespace WebSite.Controllers
                 //读取文件中的一行字符
                 deviceCnf = DeviceConfig.ReadLine();
             }
-            
+
             configSet cs = JsonConvert.DeserializeObject<configSet>(deviceCnf);
             config c = cs.configs[0];
             return c;
+        }
+
+        public ActionResult<string> getChartInfo(int N = 50, string POS = "_all", string dataType = "passrate")
+        {
+            var ins = DBAccess.GetRecord().ToList();
+            ins.Reverse();
+            List<chartInfo> set = new List<chartInfo>();
+            Func<Record, double> func = x => 0;
+            if (dataType == "passrate")
+            {
+                func = x => x.PASS_RATE;
+            }
+            else if (dataType == "speed")
+            {
+                func = x => x.SPEED;
+            }
+
+            foreach (var i in ins)
+            {
+                if (POS != "_all" && i.DEVICE_ID != POS)
+                {
+                    continue;
+                }
+                bool newLineRecord = true;
+                if (set.Count == 0)
+                {
+                    set.Add(new(func(i), i.DEVICE_ID));
+                    continue;
+                }
+                foreach (chartInfo info in set)
+                {
+                    if (info.isSameLine(i))
+                    {
+                        newLineRecord = false;
+                        if (info.num < N)
+                        {
+                            info.records.Add(func(i));
+                            info.num++;
+                        }
+                        break;
+                    }
+                }
+                if (newLineRecord)
+                {
+                    set.Add(new(func(i), i.DEVICE_ID));
+                }
+            }
+            string result = JsonConvert.SerializeObject(set);
+            return result;
         }
     }
 }
