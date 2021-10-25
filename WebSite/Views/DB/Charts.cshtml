@@ -6,20 +6,27 @@
     <div align="right">
         显示数据条数：
         <select id="listNum" class="form-select">
-            <option value="50">50</option>
-            <option selected value="100">100</option>
-            <option value="200">200</option>
-            <option value="-1">所有</option>
+            <option value="20">20</option>
+            <option selected value="50">50</option>
+            <option value="100">100</option>
         </select>
     </div>
 
-    <div align="right">
+@*    <div align="right">
         设备记录筛选：
         <select id="deviceSelect" class="form-select" onchange="updateDataSrc()">
             <option value="line1">line1</option>
             <option value="line2">line2</option>
             <option value="line3">line3</option>
             <option selected value="_all">所有</option>
+        </select>
+    </div>*@
+
+    <div align="right">
+        图表数据内容：
+        <select id="dataTypeSelect" class="form-select">
+            <option selected value="passrate">合格率%</option>
+            <option value="speed">速度(个/分钟)</option>
         </select>
     </div>
 
@@ -48,27 +55,6 @@
         });
 
         var TableTitle = "@ViewData["pos"]";
-
-        var jsonArr = [];
-        var nameData = [];
-        var seriesData = [];
-
-        // 基于准备好的dom，初始化echarts实例
-        //var option = {
-        //    title: {
-        //        text: TableTitle
-        //    },
-        //    tooltip: {},
-        //    xAxis: {
-        //        type: "category",
-        //    },
-        //    yAxis: {
-        //        type: "value",
-        //        min: -1,
-        //        max: 6
-        //    }
-        //};
-        //myChart.setOption(option);
         
         var myChart = echarts.init(document.getElementById('main'));
         var option = {};
@@ -78,12 +64,11 @@
             myChart.setOption(option);
 
             num = $("#listNum").find("option:selected").val();
-            selectedDevice = $("#deviceSelect").find("option:selected").val();
+            selectedDataType = $("#dataTypeSelect").find("option:selected").val();
             var chartSeries = [];
             var indexSeries = [];
-            if (selectedDevice == "全部") {
-                QueryUrl = "/DB/getChartInfo?POS=_all&N=" + num;
-            } else { QueryUrl = "/DB/getChartInfo?POS=" + selectedDevice + "&N=" + num; }
+            var nameSeries = [];
+            QueryUrl = "/DB/getChartInfo?dataType=" + selectedDataType + "&N=" + num;
             $.ajax({
                 type: "GET",
                 contentType: "application/json; charset=utf-8",
@@ -95,6 +80,7 @@
                     jsonArr = JSON.parse(data);
                     $.each(jsonArr, function(index, value){
                         chartSeries.push({type: 'line', data: jsonArr[index].records, name: jsonArr[index].deviceID});
+                        nameSeries.push(jsonArr[index].deviceID);
                         for(i = 1; i <= jsonArr[index].records.length; i++){
                             if(i > Math.max(...indexSeries)){
                                 indexSeries.push(i);
@@ -104,11 +90,16 @@
                 }
             });
             option = {
+                legend: {data: nameSeries, top: '4%'},
                 xAxis: {type: 'category', data: indexSeries},
                 yAxis: {type: 'value', scale: 'true'},
                 series: chartSeries
             };
-            console.log(option);
+            if(selectedDataType == 'passrate'){
+                option.yAxis = {type:'value', scale: true, max: 1, min: 0}
+            }else{
+                option.yAxis = {type:'value', scale: true, max:100, min:0}
+            }
 
             setTimeout(updateData, 1000);
         }

@@ -33,11 +33,11 @@ namespace WebSite.Controllers
         public List<double> records;
 
         public chartInfo() { }
-        public chartInfo(Record firstRecord)
+        public chartInfo(double firstRecord, string deviceID)
         {
-            num = 1; deviceID = firstRecord.DEVICE_ID;
+            num = 1; this.deviceID = deviceID;
             records = new List<double>();
-            records.Add(firstRecord.SPEED);
+            records.Add(firstRecord);
         }
         public bool isSameLine(Record r)
         {
@@ -260,18 +260,31 @@ namespace WebSite.Controllers
             return c;
         }
 
-        public ActionResult<string> getChartInfo(int N = 50, string POS = "_all")
+        public ActionResult<string> getChartInfo(int N = 50, string POS = "_all", string dataType = "passrate")
         {
             var ins = DBAccess.GetRecord().ToList();
             ins.Reverse();
             List<chartInfo> set = new List<chartInfo>();
+            Func<Record, double> func = x => 0;
+            if (dataType == "passrate")
+            {
+                func = x => x.PASS_RATE;
+            }
+            else if (dataType == "speed")
+            {
+                func = x => x.SPEED;
+            }
+
             foreach (var i in ins)
             {
+                if (POS != "_all" && i.DEVICE_ID != POS)
+                {
+                    continue;
+                }
                 bool newLineRecord = true;
                 if (set.Count == 0)
                 {
-                    chartInfo ci = new(i);
-                    set.Add(ci);
+                    set.Add(new(func(i), i.DEVICE_ID));
                     continue;
                 }
                 foreach (chartInfo info in set)
@@ -279,9 +292,9 @@ namespace WebSite.Controllers
                     if (info.isSameLine(i))
                     {
                         newLineRecord = false;
-                        if (info.num<N)
+                        if (info.num < N)
                         {
-                            info.records.Add(i.SPEED);
+                            info.records.Add(func(i));
                             info.num++;
                         }
                         break;
@@ -289,7 +302,7 @@ namespace WebSite.Controllers
                 }
                 if (newLineRecord)
                 {
-                    set.Add(new chartInfo(i));
+                    set.Add(new(func(i), i.DEVICE_ID));
                 }
             }
             string result = JsonConvert.SerializeObject(set);
