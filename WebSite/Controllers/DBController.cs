@@ -219,7 +219,7 @@ namespace WebSite.Controllers
                 List<Status> statusIns = DBAccess.GetStatusByPos(pos).ToList();
                 if (statusIns.Count == 0) continue;
                 if (statusIns[0].ONLINE) { status = 1; } else { status = 0; }
-                if (statusIns[0].ERROR) { status = 2; }
+                if (statusIns[0].ERROR) { status = 2; WriteLog("Error device: " + statusIns[0].DEVICE_ID + "\t Time: " + DateTime.Now.ToString("G")); }
                 TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status},\"TotalRecords\":{ins.Count}}},";
             }
             result = "[" + TimeRecords.TrimEnd(',') + "]";
@@ -258,6 +258,17 @@ namespace WebSite.Controllers
             configSet cs = JsonConvert.DeserializeObject<configSet>(deviceCnf);
             config c = cs.configs[0];
             return c;
+        }
+
+        public int WriteLog(string logs = "", string LogFile = "ErrorDevice.log")
+        {
+            FileStream fs = new FileStream(LogFile, FileMode.Append);
+            StreamWriter logWriter = new StreamWriter(fs);
+            logWriter.WriteLine(logs);
+            logWriter.Flush();
+            logWriter.Close();
+            fs.Close();
+            return 0;
         }
 
         public ActionResult<string> getChartInfo(int N = 50, string POS = "_all", string dataType = "passrate")
