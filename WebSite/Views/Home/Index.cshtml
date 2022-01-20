@@ -7,8 +7,11 @@
     <table class="table">
         <thead>
             <tr>
-                <th>设备</th>
-                <th>记录数</th>
+                <th>设备号</th>
+                <th>数量</th>
+                <th>钢球规格</th>
+                <th>速度</th>
+                <th>合格率</th>
                 <th>最后更新时间</th>
                 <th>状态</th>
             </tr>
@@ -57,7 +60,7 @@
             }
         });
 
-        setTimeout(updateData, 1000);
+        setTimeout(updateData, 3000);
     }
 
     function RefreshTable() {
@@ -81,6 +84,18 @@
         var TotalRecordsCell = document.createElement('td');
         TotalRecordsCell.innerHTML = h.TotalRecords;
         row.appendChild(TotalRecordsCell);
+
+        var DeviceDiameterCell = document.createElement('td');
+        DeviceDiameterCell.innerHTML = h.DeviceDiameter;
+        row.appendChild(DeviceDiameterCell);
+
+        var SpeedCell = document.createElement('td');
+        SpeedCell.innerHTML = h.Speed;
+        row.appendChild(SpeedCell);
+
+        var PassRateCell = document.createElement('td');
+        PassRateCell.innerHTML = h.PassRate;
+        row.appendChild(PassRateCell);
 
         var RecordTimeCell = document.createElement('td');
         RecordTimeCell.innerHTML = h.RecordTime;

@@ -67,9 +67,9 @@ namespace WebSite.Controllers
         }
 
         //插入数据
-        public ActionResult<string> Create(int id, DateTime time, double ballDiameter, double deviceDiameter, string deviceID, int ballId, double speed, double passRate)
+        public ActionResult<string> Create(int id, DateTime time, double ballDiameter, double deviceDiameter, string deviceID, int ballId, double speed, double passRate,int recordCnt)
         {
-            var _record = new Record(id, time, ballDiameter, deviceDiameter, deviceID, ballId, speed, passRate);
+            var _record = new Record(id, time, ballDiameter, deviceDiameter, deviceID, ballId, speed, passRate, recordCnt);
 
             var result = DBAccess.CreateRecord(_record);
 
@@ -207,7 +207,7 @@ namespace WebSite.Controllers
                 DateTime recordTime = ins[ins.Count - 1].TIME;
                 DateTime currentTime = DateTime.Now;
                 TimeSpan DiffSeconds = new TimeSpan(currentTime.Ticks - recordTime.Ticks);
-                if (DiffSeconds.TotalSeconds > 30)
+                if (DiffSeconds.TotalSeconds > 10)
                 {
                     status = 0;
                 }
@@ -215,12 +215,16 @@ namespace WebSite.Controllers
                 {
                     status = 1;
                 }
-
+                List<Record> recordsIns = DBAccess.GetRecordByPos(pos).ToList();
+                double device_diameter = double.Parse(recordsIns.Last().DEVICE_DIAMETER.ToString("0.000"));
+                double speed = double.Parse(recordsIns.Last().SPEED.ToString("0.000"));
+                double pass_rate = double.Parse(recordsIns.Last().PASS_RATE.ToString("0.000"));
+                int total_records = recordsIns.Last().RECORD_CNT;
                 List<Status> statusIns = DBAccess.GetStatusByPos(pos).ToList();
                 if (statusIns.Count == 0) continue;
-                if (statusIns[0].ONLINE) { status = 1; } else { status = 0; }
+                //if (statusIns[0].ONLINE) { status = 1; } else { status = 0; }
                 if (statusIns[0].ERROR) { status = 2; WriteLog("Error device: " + statusIns[0].DEVICE_ID + "\t Time: " + DateTime.Now.ToString("G")); }
-                TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status},\"TotalRecords\":{ins.Count}}},";
+                TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status},\"TotalRecords\":{total_records},\"DeviceDiameter\":{device_diameter},\"Speed\":{speed},\"PassRate\":{pass_rate}}},";
             }
             result = "[" + TimeRecords.TrimEnd(',') + "]";
             return result;
