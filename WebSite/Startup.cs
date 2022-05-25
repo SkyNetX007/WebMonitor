@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using WebSite.DatabaseAccess;
 using MySQL.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 
 namespace WebSite
 {
@@ -28,6 +30,14 @@ namespace WebSite
             services.AddDbContextPool<DBContext>(options => options.UseMySQL(Configuration.GetConnectionString("MysqlConnection")));
             services.AddScoped<IDBAccess, DBAccess>();
             services.AddControllersWithViews();
+            services.AddIdentity<IdentityUser, IdentityRole>().AddDefaultTokenProviders();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => {
+                options.Cookie.Name = "AuthCookie";//cookie名称
+                options.LoginPath = "/Account/Login";//登录路径
+                options.LogoutPath = "/Account/Logout";
+                options.Cookie.HttpOnly = true;//cookie操作权限
+                //options.SessionStore = new MemoryCacheTicketStore();
+            } );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +54,8 @@ namespace WebSite
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

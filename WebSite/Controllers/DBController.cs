@@ -19,6 +19,7 @@ namespace WebSite.Controllers
         public string incUpper;
         public double lowerLimit;
         public string incLower;
+        public string batch;
     }
 
     public class filterSet
@@ -67,9 +68,9 @@ namespace WebSite.Controllers
         }
 
         //插入数据
-        public ActionResult<string> Create(int id, DateTime time, double ballDiameter, double deviceDiameter, string deviceID, int ballId, double speed, double passRate,int recordCnt)
+        public ActionResult<string> Create(int id, DateTime time, double ballDiameter, double deviceDiameter, string deviceID, int ballId, double speed, double passRate,int recordCnt, string batch)
         {
-            var _record = new Record(id, time, ballDiameter, deviceDiameter, deviceID, ballId, speed, passRate, recordCnt);
+            var _record = new Record(id, time, ballDiameter, deviceDiameter, deviceID, ballId, speed, passRate, recordCnt, batch);
 
             var result = DBAccess.CreateRecord(_record);
 
@@ -112,6 +113,11 @@ namespace WebSite.Controllers
             filterSet fs = JsonConvert.DeserializeObject<filterSet>(filters);
             foreach (filter f in fs.filters)
             {
+                if (f.element == "BATCH")
+                {
+                    Func<Record, String> func = x => x.BATCH;
+                    ins.RemoveAll(n => func(n) != f.batch);
+                }
                 if (f.element != "_none")
                 {
                     //改变比较数值类型
@@ -124,7 +130,6 @@ namespace WebSite.Controllers
                     {
                         func = x => ((x.TIME - new DateTime(1970, 1, 1, 0, 0, 0, 0).ToLocalTime()).TotalSeconds * 1000);
                     }
-
                     if (f.type == "BETWEEN")
                     {
                         if (f.incUpper == "false")
@@ -181,6 +186,7 @@ namespace WebSite.Controllers
                 result += $",\"DEVICE_ID\":\"{results[num].DEVICE_ID}\"";
                 result += $",\"SPEED\":\"{results[num].SPEED}\"";
                 result += $",\"PASS_RATE\":\"{results[num].PASS_RATE}\"";
+                result += $",\"BATCH\":\"{results[num].BATCH}\"";
                 result += $"}},";
             }
             result = result.TrimEnd(',');
@@ -194,20 +200,18 @@ namespace WebSite.Controllers
         {
             string deviceList = GetDeviceCnf("Device.cnf").deviceList;
             List<string> Device = deviceList.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
-
-            List<Record> ins;
             string TimeRecords = "";
             string result = "";
 
             foreach (var pos in Device)
             {
-                ins = DBAccess.GetRecordByPos(pos).ToList();
+                List<Record> recordsIns = DBAccess.GetRecordByPos(pos).ToList();
                 int status;
-                if (ins.Count == 0) continue;
-                DateTime recordTime = ins[ins.Count - 1].TIME;
+                if (recordsIns.Count == 0) continue;
+                DateTime recordTime = recordsIns.Last().TIME;
                 DateTime currentTime = DateTime.Now;
                 TimeSpan DiffSeconds = new TimeSpan(currentTime.Ticks - recordTime.Ticks);
-                if (DiffSeconds.TotalSeconds > 10)
+                if (DiffSeconds.TotalSeconds > 30)
                 {
                     status = 0;
                 }
@@ -215,7 +219,6 @@ namespace WebSite.Controllers
                 {
                     status = 1;
                 }
-                List<Record> recordsIns = DBAccess.GetRecordByPos(pos).ToList();
                 double device_diameter = double.Parse(recordsIns.Last().DEVICE_DIAMETER.ToString("0.000"));
                 double speed = double.Parse(recordsIns.Last().SPEED.ToString("0.000"));
                 double pass_rate = double.Parse(recordsIns.Last().PASS_RATE.ToString("0.000"));
@@ -224,7 +227,7 @@ namespace WebSite.Controllers
                 if (statusIns.Count == 0) continue;
                 //if (statusIns[0].ONLINE) { status = 1; } else { status = 0; }
                 if (statusIns[0].ERROR) { status = 2; WriteLog("Error device: " + statusIns[0].DEVICE_ID + "\t Time: " + DateTime.Now.ToString("G")); }
-                TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"Status\":{status},\"TotalRecords\":{total_records},\"DeviceDiameter\":{device_diameter},\"Speed\":{speed},\"PassRate\":{pass_rate}}},";
+                TimeRecords += $"{{\"POS\":\"{pos}\",\"RecordTime\":\"{recordTime}\",\"CurrentTime\":\"{currentTime}\",\"Status\":{status},\"TotalRecords\":{total_records},\"DeviceDiameter\":{device_diameter},\"Speed\":{speed},\"PassRate\":{pass_rate},\"DiffSec\":{DiffSeconds.TotalSeconds}}},";
             }
             result = "[" + TimeRecords.TrimEnd(',') + "]";
             return result;

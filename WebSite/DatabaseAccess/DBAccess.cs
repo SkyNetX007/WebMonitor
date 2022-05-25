@@ -13,15 +13,16 @@ namespace WebSite.DatabaseAccess
         {
             Context = context;
         }
-
-        //插入数据
+        
+        // 生产数据
+        // 插入数据
         public bool CreateRecord(Record ins)
         {
             Context.Record.Add(ins);
             return Context.SaveChanges() > 0;
         }
 
-        //取全部记录
+        // 取全部记录
         public IEnumerable<Record> GetRecord()
         {
             return Context.Record.ToList();
@@ -32,7 +33,7 @@ namespace WebSite.DatabaseAccess
             return Context.Status.ToList();
         }
 
-        //取某设备记录
+        // 取某设备记录
         public IEnumerable<Record> GetRecordByPos(string pos)
         {
             return Context.Record.Where(s => s.DEVICE_ID == pos).ToList();
@@ -43,20 +44,20 @@ namespace WebSite.DatabaseAccess
             return Context.Status.Where(s => s.DEVICE_ID == pos).ToList();
         }
 
-        //取某id记录
+        // 取某id记录
         public Record GetRecordByID(int id)
         {
             return Context.Record.SingleOrDefault(s => s.ID == id);
         }
 
-        //根据id更新整条记录
+        // 根据id更新整条记录
         public bool UpdateRecord(Record ins)
         {
             Context.Record.Update(ins);
             return Context.SaveChanges() > 0;
         }
-
-        //根据id更新名称
+        
+        // 根据id更新名称
         public bool UpdateValByID(int id, string val)
         {
             var state = false;
@@ -71,11 +72,40 @@ namespace WebSite.DatabaseAccess
             return state;
         }
 
-        //根据id删掉记录
+        // 根据id删掉记录
         public bool DeleteRecordByID(int id)
         {
             var ins = Context.Record.SingleOrDefault(s => s.ID == id);
             Context.Record.Remove(ins);
+            return Context.SaveChanges() > 0;
+        }
+
+        // 用户数据
+        // 插入数据
+        public bool CreateUser(User ins)
+        {
+            Context.User.Add(ins);
+            return Context.SaveChanges() > 0;
+        }
+
+        // 取某id记录
+        public User GetUserByID(int id)
+        {
+            return Context.User.SingleOrDefault(s => s.ID == id);
+        }
+
+        // 根据id更新整条记录
+        public bool UpdateUser(User ins)
+        {
+            Context.User.Update(ins);
+            return Context.SaveChanges() > 0;
+        }
+
+        // 根据id删掉记录
+        public bool DeleteUserByID(int id)
+        {
+            var ins = Context.User.SingleOrDefault(s => s.ID == id);
+            Context.User.Remove(ins);
             return Context.SaveChanges() > 0;
         }
     }

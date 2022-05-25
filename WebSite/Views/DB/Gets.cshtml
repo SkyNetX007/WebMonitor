@@ -31,6 +31,10 @@
         </select>
     </div>
     <div align="right">
+        <label>按批次筛选：</label><input id="filterBatch"></input>
+        <label>启用批次筛选</label><input id="batchEnable" type="checkbox"></input>
+    </div>
+    <div align="right">
         <fieldset class="form-group p-3">
             <div>
                 <label for="filterElementSelect">按数值筛选：</label>
@@ -205,12 +209,7 @@
         var tmpFilterType = $("#filterTypeSelect").find("option:selected").val();
         var tmpUpperLimitFloat = 0;
         var tmpLowerLimitFloat = 0;
-        if (tmpFilterElement == "_none") {
-            //重置所有过滤器
-            filters = [];
-            updateTable();
-            return;
-        }
+        var batch = $("#filterBatch").val();
         if ($("#filterClear").get(0).checked == true) {
             //清除单个过滤器
             filters = filters.filter(t => t.element != tmpFilterElement);
@@ -235,7 +234,16 @@
         includeUpperLimit = $("#filterIncludeUpperLimit").get(0).checked;
         includeLowerLimit = $("#filterIncludeLowerLimit").get(0).checked;
         filters = filters.filter(t => t.element != tmpFilterElement);
-        filters.push(new elemFilter(tmpFilterElement, tmpFilterType, tmpUpperLimitFloat, tmpLowerLimitFloat, includeUpperLimit, includeLowerLimit));
+        if ($("#batchEnable").get(0).checked == false) {
+            //判断批次过滤器
+            batch = "";
+        }
+        filters.push(new elemFilter(tmpFilterElement, tmpFilterType, tmpUpperLimitFloat, tmpLowerLimitFloat, includeUpperLimit, includeLowerLimit, batch));
+        if (tmpFilterElement == "_none") {
+            //重置数值过滤器
+            filters = [];
+            filters.push(new elemFilter("BATCH", "", "", "", "", "", batch));
+        }
         console.log(JSON.stringify({ filters }));
         updateTable();
     }
@@ -269,13 +277,14 @@
             $("#filterLowerLimit").attr("disabled", false);
         }
     }
-    function elemFilter(element, type, upperLimit, lowerLimit, incUpper, incLower) {
+    function elemFilter(element, type, upperLimit, lowerLimit, incUpper, incLower, batch) {
         this.element = element;
         this.type = type;
         this.upperLimit = upperLimit;
         this.lowerLimit = lowerLimit;
         this.incUpper = incUpper;
         this.incLower = incLower;
+        this.batch = batch;
     }
 
 </script>

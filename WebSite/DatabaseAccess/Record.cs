@@ -43,14 +43,17 @@ namespace WebSite.DatabaseAccess
         [Column("PASS_RATE")]
         public double PASS_RATE {  get; set; }
 
-        [Column("RECORD_CNT")]
+        [Column("RECORD")]
         public int RECORD_CNT { get; set; }
+
+        [Column("BATCH")]
+        public string BATCH { get; set; }
 
         //public Record(int ID, DateTime TIME, double DIAMETER, string POS, bool PASSED)
         //{
         //    this.ID = ID; this.TIME = TIME; this.DIAMETER = DIAMETER; this.POS = POS; this.PASSED = PASSED;
         //}
-        public Record(int ID, DateTime time, double ballDiameter, double deviceDiameter, string deviceID, int ballID, double speed, double passRate, int recordCnt)
+        public Record(int ID, DateTime time, double ballDiameter, double deviceDiameter, string deviceID, int ballID, double speed, double passRate, int recordCnt, string batch)
         {
             this.ID = ID;
             this.TIME = time;
@@ -61,6 +64,7 @@ namespace WebSite.DatabaseAccess
             this.SPEED = speed;
             this.PASS_RATE = passRate;
             this.RECORD_CNT = recordCnt;
+            this.BATCH = batch;
         }
 
         public Record() { }

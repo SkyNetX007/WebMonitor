@@ -2,6 +2,56 @@
     ViewData["Title"] = "Home Page";
 }
 
+<style type="text/css">
+:root {
+    --square-size: 85px;
+    --square-gap: 5px;
+}
+.squares {
+    grid-area: squares;
+}
+.graph {
+    display: inline-grid;
+    grid-template-columns: auto 1fr;
+    grid-gap: 10px;
+}
+.squares {
+    display: grid;
+    grid-gap: var(--square-gap);
+    grid-template-rows: repeat(7, var(--square-size));
+}
+.squares {
+    grid-auto-flow: column;
+    grid-auto-columns: var(--square-size);
+}
+/* Other styling */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 12px;
+}
+.graph {
+    padding: 20px;
+    border: 1px #e1e4e8 solid;
+    margin: 20px;
+}
+.squares li {
+    background-color: #ebedf0;
+}
+.squares li[data-level="1"] {
+    background-color: #c6e48b;
+}
+.squares li[data-level="2"] {
+    background-color: #dc143c;
+}
+</style>
+
+<div class="graph">
+    <ul class="squares">
+        <!-- added via javascript -->
+    </ul>
+</div>
+
 <div class="text-center">
     <h1 class="display-4">钢球检测监控</h1>
     <table class="table">
@@ -18,11 +68,18 @@
         </thead>
         <tbody id="StatusTable"></tbody>
     </table>
-    <p>项目地址：<a href="https://gitee.com/SkyNetX007/WebMonitor/">https://gitee.com/SkyNetX007/WebMonitor/</a></p>
 </div>
 
 <script type="text/javascript" src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
 <script type="text/javascript">
+    // Add squares
+    const squares = document.querySelector('.squares');
+    /*
+    for (var i = 1; i < 16; i++) {
+       const level = Math.floor(Math.random() * 2);
+       squares.insertAdjacentHTML('beforeend', `<li data-level="${level}"></li>`);
+    }*/
+
     var jsonArr = [];
     var cssArr = [];
 
@@ -43,6 +100,7 @@
                 if (jsonArr[0] == null) {
                     alert("等待数据...");
                 }
+                squares.innerHTML = "";
                 for (var i = 0; i < jsonArr.length; i++) {
                     cssArr[i].POS = "<a href=" + "/DB/Charts?POS=" + jsonArr[i].POS + ">" + jsonArr[i].POS + "</a>";
                     if (jsonArr[i].Status == 0) {
@@ -54,6 +112,7 @@
                     else {
                         cssArr[i].Status = "<span class='badge bg-danger text-white'>" + "异常" + "</span>";
                     }
+                    squares.insertAdjacentHTML('beforeend', `<li data-level="${jsonArr[i].Status}"></li>`);
                 }
 
                 RefreshTable();
